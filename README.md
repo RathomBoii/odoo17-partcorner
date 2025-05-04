@@ -13,9 +13,10 @@
 
 
 ## How to Restart 
+```bash
 sudo systemctl daemon-reload
 sudo systemctl restart odoo17
-
+```
 ## How pull code
 
 ```bash
