@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_invoice_document_inherit_qr" inherit_id="account.report_invoice_document">
+        <xpath expr="//p[@name='payment_communication']" position="after">
+            <div t-if="o.qr_code_id" class="row mt-2">
+                <div class="col-6">
+                    <strong>Payment QR Code:</strong>
+                    <div class="mt-2">
+                        <img t-att-src="image_data_uri(o.qr_code_id.qr_code)" style="max-width: 200px;"/>
+                    </div>
+                    <p class="text-muted mt-2">Scan to pay</p>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

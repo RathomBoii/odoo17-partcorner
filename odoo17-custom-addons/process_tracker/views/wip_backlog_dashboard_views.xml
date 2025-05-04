@@ -1,0 +1,40 @@
+<odoo>
+  <record id="view_wip_backlog_dashboard_form" model="ir.ui.view">
+      <field name="name">wip.backlog.dashboard.form</field>
+      <field name="model">wip.backlog.dashboard</field>
+      <field name="arch" type="xml">
+          <form string="WIP and Backlog Dashboard">
+              <sheet>
+                  <!-- WIP Section -->
+                  <group string="WIP Section">
+                      <group>
+                          <field name="wip_count" readonly="1"  />
+                      </group>
+                      <field name="wip_ids" readonly="1">
+                          <tree string="WIP Records">
+                              <field name="sale_order_id"/>
+                              <field name="customer"/>
+                              <field name="created_date"/>
+                              <field name="status"/>
+                          </tree>
+                      </field>
+                  </group>
+
+                  <!-- Backlog Section -->
+                  <group string="Backlog Section">
+                      <group>
+                          <field name="backlog_count" readonly="1"  />
+                      </group>
+                      <field name="backlog_ids" readonly="1">
+                          <tree string="Backlog Records">
+                              <field name="sale_order_id"/>
+                              <field name="status"/>
+                              <field name="created_date"/>
+                          </tree>
+                      </field>
+                  </group>
+              </sheet>
+          </form>
+      </field>
+  </record>
+</odoo>

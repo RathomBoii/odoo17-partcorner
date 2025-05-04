@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="payment_provider_qr" model="payment.provider">
+            <field name="name">QR Payment</field>
+            <field name="code">qr_payment</field>
+            <field name="state">enabled</field>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+    </data>
+</odoo>

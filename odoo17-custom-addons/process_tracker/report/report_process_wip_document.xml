@@ -1,0 +1,20 @@
+<!-- <odoo>
+  <template id="report_process_wip_document">
+    <t t-call="web.external_layout">
+      <div class="page">
+        <h2>WIP Task Sheet</h2>
+        <p><strong>Sale Order:</strong> <t t-esc="doc.sale_order_id.name"/></p>
+        <p><strong>Status:</strong> <t t-esc="doc.status"/></p>
+        <p><strong>Created:</strong> <t t-esc="doc.created_date"/></p>
+
+        <t t-foreach="dict(doc._fields['status'].selection).keys()" t-as="step">
+          <div style="margin-top: 15px">
+            <t t-set="qr_url" t-value="doc.get_qr_url_status(step)"/>
+            <strong><t t-esc="dict(doc._fields['status'].selection)[step]"/></strong><br/>
+            <img t-att-src="'/report/barcode/?type=QR&value=' + qr_url + '&width=128&height=128'" style="margin-top:5px"/>
+          </div>
+        </t>
+      </div>
+    </t>
+  </template>
+</odoo> -->

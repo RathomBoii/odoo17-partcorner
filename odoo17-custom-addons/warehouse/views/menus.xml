@@ -1,0 +1,4 @@
+<odoo>
+    <menuitem id="menu_warehouse_root" name="Warehouse" sequence="10"  />
+      <menuitem id="menu_task" name="Task" parent="menu_warehouse_root" action="action_task"/>
+  </odoo>

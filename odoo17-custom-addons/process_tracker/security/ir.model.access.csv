@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_process_backlog_user,access_process_backlog_user,model_process_backlog,base.group_user,1,1,1,1
+access_process_wip_user,access_process_wip_user,model_process_wip,base.group_user,1,1,1,1
+access_process_wip_log_user,access_process_wip_log_user,model_process_wip_log,base.group_user,1,0,0,0
+access_process_wip_log_admin,access_process_wip_log_admin,model_process_wip_log,base.group_system,1,1,1,1
+access_process_wip,access_process_wip,model_process_wip,base.group_user,1,1,1,0
+access_process_wip_log_user,access_process_wip_log_user,model_process_wip_log,base.group_user,1,1,1,0
+access_process_wip_user,access_process_wip_user,model_wip_backlog_dashboard,base.group_user,1,0,0,0

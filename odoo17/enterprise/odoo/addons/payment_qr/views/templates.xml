@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="qr_code_scan_success" name="QR Code Scan Success">
+        <t t-call="web.layout">
+            <div class="container mt-4">
+                <div class="alert alert-success">
+                    <h4>QR Code Scanned Successfully!</h4>
+                    <p>Thank you for scanning the QR code for <t t-esc="qr_code.name"/>.</p>
+                    <p>Please follow the payment instructions below:</p>
+                    <div t-field="qr_code.description"/>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

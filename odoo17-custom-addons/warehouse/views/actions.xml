@@ -1,0 +1,7 @@
+<odoo>
+    <record id="action_task" model="ir.actions.act_window">
+        <field name="name">Task</field>
+        <field name="res_model">warehouse.task</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

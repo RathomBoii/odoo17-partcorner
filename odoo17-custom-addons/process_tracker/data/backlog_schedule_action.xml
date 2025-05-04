@@ -1,0 +1,16 @@
+<odoo>
+    <data noupdate="1">
+        <!-- Scheduled Action for Backlog Auto Status Transition -->
+        <record id="ir_cron_backlog_auto_status_transition" model="ir.cron">
+            <field name="name">Auto Backlog Status Transition</field>
+            <field name="model_id" ref="model_process_backlog"/>
+            <field name="state">code</field>
+            <field name="code">model.auto_transition_status()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">1</field>
+            <field name="active">True</field>
+            <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"/>
+        </record>
+    </data>
+</odoo>

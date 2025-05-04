@@ -1,0 +1,20 @@
+<odoo>
+    <record id="action_wip" model="ir.actions.act_window">
+        <field name="name">WIP</field>
+        <field name="res_model">process.wip</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_backlog" model="ir.actions.act_window">
+        <field name="name">Backlog</field>
+        <field name="res_model">process.backlog</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_wip_backlog_dashboard" model="ir.actions.act_window">
+        <field name="name">WIP and Backlog Overview</field>
+        <field name="res_model">wip.backlog.dashboard</field>
+        <field name="view_mode">form</field>
+    </record>
+
+</odoo>

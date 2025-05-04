@@ -1,0 +1,33 @@
+<odoo>
+  <record id="view_wip_tree" model="ir.ui.view">
+    <field name="model">process.wip</field>
+    <field name="arch" type="xml">
+      <tree>
+        <field name="sale_order_id"/>
+        <field name="status"/>
+        <field name="total"/>
+        <field name="invoice_id"/>
+      </tree>
+    </field>
+  </record>
+
+  <record id="view_wip_form" model="ir.ui.view">
+    <field name="model">process.wip</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <field name="sale_order_id" readonly="1"/>
+            <field name="created_date" readonly="1"/>
+            <field name="total" readonly="1"/>
+            <field name="invoice_id" readonly="1"/>
+            <field name="status"/>
+          </group>
+          <footer>
+            <button name="revert_status" type="object" string="Revert Status"/>
+          </footer>
+        </sheet>
+      </form>
+    </field>
+  </record>
+</odoo>

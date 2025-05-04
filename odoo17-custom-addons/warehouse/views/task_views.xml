@@ -1,0 +1,71 @@
+<odoo>
+        <!-- FORM VIEW -->
+        <record id="view_task_form" model="ir.ui.view">
+            <field name="name">warehouse.task.form</field>
+            <field name="model">warehouse.task</field>
+            <field name="arch" type="xml">
+                <form string="Warehouse Task">
+                    <header>
+                        <!-- <button name="action_set_status" type="object" string="ที่ต้องทำ" class="btn-primary"
+                                context="{'new_status': 'order_received'}"
+                                modifiers="{'invisible': [('status', '=', 'order_received')]}"/>
+                        <button name="action_set_status" type="object" string="รวบรวมสินค้า" class="btn-primary"
+                                context="{'new_status': 'kitting'}"
+                                modifiers="{'invisible': [('status', '=', 'kitting')]}"/>
+                        <button name="action_set_status" type="object" string="ตรวจสอบสินค้าก่อนแพ็ค" class="btn-primary"
+                                context="{'new_status': 'checking'}"
+                                modifiers="{'invisible': [('status', '=', 'checking')]}"/>
+                        <button name="action_set_status" type="object" string="แพ็คสินค้า" class="btn-primary"
+                                context="{'new_status': 'packing'}"
+                                modifiers="{'invisible': [('status', '=', 'packing')]}"/>
+                        <button name="action_set_status" type="object" string="จองรอบการจัดส่ง" class="btn-primary"
+                                context="{'new_status': 'booking'}"
+                                modifiers="{'invisible': [('status', '=', 'booking')]}"/>
+                        <button name="action_set_status" type="object" string="สินค้าถูกรับไปโดยบริษัทขนส่ง" class="btn-primary"
+                                context="{'new_status': 'pick_up_by_courier'}"
+                                modifiers="{'invisible': [('status', '=', 'pick_up_by_courier')]}"/>
+                        <button name="action_set_status" type="object" string="ส่งมอบสินค้าแล้ว" class="btn-success"
+                                context="{'new_status': 'done'}"
+                                modifiers="{'invisible': [('status', '=', 'done')]}"/> -->
+                        <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,booking,pick_up_by_courier,done"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <!-- <field name="status" widget="radio"/> -->
+                            <field name="status" style="border-bottom: 0.5px solid black;"/>
+                            <!-- <field name="previous_status" readonly="1"/> -->
+                            <field name="sale_order_id" readonly="1"/>
+                            <field name="process_wip_id" readonly="1"/>
+                            <field name="name"  readonly="1"/>
+                            <field name="assignee"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    
+        <!-- TREE VIEW -->
+        <record id="view_task_tree" model="ir.ui.view">
+            <field name="name">warehouse.task.tree</field>
+            <field name="model">warehouse.task</field>
+            <field name="arch" type="xml">
+                <tree string="Warehouse Tasks">
+                    <field name="name"/>
+                    <field name="sale_order_id"/>
+                    <field name="process_wip_id"/>
+                    <field name="assignee"/>
+                    <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,booking,pick_up_by_courier,done"/>
+                </tree>
+            </field>
+        </record>
+    
+        <!-- ACTION -->
+        <!-- <record id="action_task" model="ir.actions.act_window">
+            <field name="name">Warehouse Tasks</field>
+            <field name="res_model">warehouse.task</field>
+            <field name="view_mode">tree,form</field>
+        </record> -->
+    
+        <!-- MENU -->
+        <!-- <menuitem id="menu_warehouse_task" name="Warehouse Tasks" parent="base.menu_custom" action="action_task"/> -->
+    </odoo>

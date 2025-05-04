@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- QR Code Scan Form View -->
+    <record id="view_qr_code_scan_form" model="ir.ui.view">
+        <field name="name">qr.code.scan.form</field>
+        <field name="model">qr.code.scan</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="qr_code_id"/>
+                            <field name="scan_date"/>
+                            <field name="invoice_id"/>
+                        </group>
+                        <group>
+                            <field name="ip_address"/>
+                            <field name="user_agent"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- QR Code Scan Search View -->
+    <record id="view_qr_code_scan_search" model="ir.ui.view">
+        <field name="name">qr.code.scan.search</field>
+        <field name="model">qr.code.scan</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="qr_code_id"/>
+                <field name="invoice_id"/>
+                <field name="scan_date"/>
+                <group expand="0" string="Group By">
+                    <filter string="QR Code" name="group_by_qr_code" context="{'group_by': 'qr_code_id'}"/>
+                    <filter string="Invoice" name="group_by_invoice" context="{'group_by': 'invoice_id'}"/>
+                    <filter string="Scan Date" name="group_by_date" context="{'group_by': 'scan_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>

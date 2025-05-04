@@ -1,0 +1,12 @@
+<odoo>
+  <template id="portal_sale_order_inherit_wip_status" inherit_id="sale.sale_order_portal_content">
+    <xpath expr="//span[@id='sale_info_title']" position="inside">
+      <t t-if="sale_order.current_wip_status">
+        <div class="alert alert-info mt-3 mb-3">
+          <strong>Order Status:</strong>
+            <span t-esc="sale_order.current_wip_status" style="color: black; margin-left: 5px"/>
+        </div>
+      </t>
+    </xpath>
+  </template>
+</odoo>

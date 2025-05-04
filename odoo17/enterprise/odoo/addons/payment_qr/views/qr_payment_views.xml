@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- QR Code Form View -->
+    <record id="view_qr_code_form" model="ir.ui.view">
+        <field name="name">qr.code.form</field>
+        <field name="model">qr.code</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. Company Bank QR"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="provider_id"/>
+                            <field name="scan_count"/>
+                            <field name="last_scan"/>
+                        </group>
+                        <group>
+                            <field name="qr_code" widget="image"/>
+                            <field name="qr_code_filename" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description"/>
+                        </page>
+                        <page string="Scans" name="scans">
+                            <field name="scan_ids">
+                                <tree>
+                                    <field name="scan_date"/>
+                                    <field name="ip_address"/>
+                                    <field name="user_agent"/>
+                                    <field name="invoice_id"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- QR Code Tree View -->
+    <record id="view_qr_code_tree" model="ir.ui.view">
+        <field name="name">qr.code.tree</field>
+        <field name="model">qr.code</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="provider_id"/>
+                <field name="scan_count"/>
+                <field name="last_scan"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- QR Code Search View -->
+    <record id="view_qr_code_search" model="ir.ui.view">
+        <field name="name">qr.code.search</field>
+        <field name="model">qr.code</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="provider_id"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Payment Provider Form View Extension -->
+    <record id="qr_payment_provider_form" model="ir.ui.view">
+        <field name="name">qr.payment.provider.form</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="QR Codes" invisible="code != 'qr_payment'">
+                    <group>
+                        <field name="default_qr_code_id" domain="[('provider_id', '=', active_id)]"/>
+                    </group>
+                    <field name="qr_code_ids" context="{'default_provider_id': active_id}">
+                        <tree>
+                            <field name="name"/>
+                            <field name="scan_count"/>
+                            <field name="last_scan"/>
+                            <field name="active"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- QR Code Action -->
+    <record id="action_qr_code_list" model="ir.actions.act_window">
+        <field name="name">QR Codes</field>
+        <field name="res_model">qr.code</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first QR Code
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_qr_code_root"
+              name="QR Codes"
+              parent="account.menu_finance_configuration"
+              sequence="5"/>
+
+    <menuitem id="menu_qr_code_list"
+              name="QR Codes"
+              action="action_qr_code_list"
+              parent="menu_qr_code_root"
+              sequence="1"/>
+</odoo>

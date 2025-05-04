@@ -1,0 +1,7 @@
+<odoo>
+  <menuitem id="menu_process_tracker_root" name="Process Tracker"  />
+    <menuitem id="menu_wip_backlog_dashboard" name="WIP and Backlog Dashboard"
+          parent="menu_process_tracker_root" action="action_wip_backlog_dashboard"/>
+    <menuitem id="menu_wip" name="WIP" parent="menu_process_tracker_root" action="action_wip"/>
+    <menuitem id="menu_backlog" name="Backlog" parent="menu_process_tracker_root" action="action_backlog"/>
+</odoo>

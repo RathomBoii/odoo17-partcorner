@@ -1,0 +1,80 @@
+<odoo>
+  <!-- TREE VIEW -->
+  <record id="view_wip_tree" model="ir.ui.view">
+    <field name="name">process.wip.tree.view</field>
+    <field name="model">process.wip</field>
+    <field name="arch" type="xml">
+      <tree string="WIP" default_order="created_date desc">
+        <field name="id" />
+        <field name="sale_order_id" />
+        <field name="customer" />
+        <field name="created_date" />
+        <field name="total" />
+        <field name="invoice_id" string="Invoice ID"/>
+        <field name="pickup_date" string="Courier Pick Up Date" />
+        <field name="delivered_date" />
+        <field name="status" 
+          widget="badge" 
+          decoration-danger="status == 'order_received'"
+          decoration-info="status == 'kitting'"
+          decoration-muted="status == 'checking'"
+          decoration-primary="status == 'packing'"
+          decoration-warning="status == 'booking'"
+          decoration-success="status == 'pick_up_by_courier' or status == 'done'"
+          optional="show"
+        />
+      </tree>
+    </field>
+  </record>
+
+  <!-- FORM VIEW -->
+  <record id="view_wip_form" model="ir.ui.view">
+    <field name="name">process.wip.form.view</field>
+    <field name="model">process.wip</field>
+    <field name="arch" type="xml">
+      <form string="WIP">
+        <sheet>
+          <group>
+            <field name="id" readonly="1"/>
+            <field name="sale_order_id" 
+              widget="many2one"
+              style="cursor: pointer;"
+              readonly="1"
+            />
+            <field name="customer"/>
+            <field name="created_date"/>
+            <field name="total"/>
+            <field name="invoice_id"/>
+            <field name="pickup_date" style="border-bottom: 0.5px solid black;"/>
+            <field name="delivered_date" style="border-bottom: 0.5px solid black;"/>
+            <field name="status" style="border-bottom: 0.5px solid black;"/>
+          </group>
+
+          <notebook>
+            <page string="History Logs">
+              <field name="wip_log_ids">
+                <tree string="WIP Logs">
+                  <field name="changed_at"/>
+                  <field name="previous_status"/>
+                  <field name="current_status"/>
+                  <field name="changed_by"/>
+                </tree>
+              </field>
+            </page>
+            <page string="Test">
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- ACTION TO LINK BOTH VIEWS -->
+  <record id="action_process_wip" model="ir.actions.act_window">
+    <field name="name">WIP</field>
+    <field name="res_model">process.wip</field>
+    <field name="view_mode">tree,form</field>
+    <field name="view_id" ref="view_wip_tree"/>
+  </record>
+
+</odoo>

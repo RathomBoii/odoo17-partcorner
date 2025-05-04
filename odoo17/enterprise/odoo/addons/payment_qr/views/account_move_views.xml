@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_form_inherit_qr" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.qr</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" type="object" name="action_view_qr_scans"
+                        icon="fa-qrcode" invisible="not qr_code_id">
+                    <field name="qr_scan_count" widget="statinfo" string="QR Scans"/>
+                </button>
+            </xpath>
+            <field name="payment_reference" position="after">
+                <field name="qr_code_id" readonly="1"/>
+                <field name="qr_last_scan" readonly="1"/>
+            </field>
+        </field>
+    </record>
+</odoo>
