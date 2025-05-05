@@ -42,9 +42,9 @@ class SaleOrderInherit(models.Model):
         process_record = self.env[model].create({
             'sale_order_id': record.id,
             'created_date': datetime.datetime.now(),
-            'total': record.amount_total,
+            # 'total': record.amount_total,
             'status': 'order_received',
-            'invoice_id': invoices,
+            # 'invoice_id': invoices,
         })
 
         # Schedule an update after transaction completes
