@@ -36,7 +36,7 @@ class SaleOrderInherit(models.Model):
 
         model = 'process.wip' if current_time <= wip_end_time and current_time >= wip_start_time else 'process.backlog'
 
-        invoices = self.invoice_ids
+        invoices = record.invoice_ids
 
         # Create WIP/Backlog without invoice and delivery initially
         process_record = self.env[model].create({
