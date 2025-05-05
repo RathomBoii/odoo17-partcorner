@@ -24,46 +24,31 @@ class SaleOrderInherit(models.Model):
             else:
                 order.current_wip_status = ''
 
+    # override Sale.order's create() method
     @api.model
     def create(self, vals):
         record = super().create(vals)
 
         # Set timezone — for Thailand
         tz = pytz.timezone("Asia/Bangkok")
+
         current_time = datetime.datetime.now(tz).time()
-        wip_start_time = datetime.time(6, 0)
+        wip_start_time = datetime.time(6,0)
         wip_end_time = datetime.time(12, 0)
 
-        model = 'process.wip' if current_time <= wip_end_time and current_time >= wip_start_time else 'process.backlog'
 
-        invoices = record.invoice_ids
+        if current_time <= wip_end_time and current_time >= wip_start_time:
+            model = 'process.wip'
+        else:
+            model = 'process.backlog'
 
-        # Create WIP/Backlog without invoice and delivery initially
-        process_record = self.env[model].create({
+
+        # compare to JS -> db.model["key"].create
+        self.env[model].create({
             'sale_order_id': record.id,
             'created_date': datetime.datetime.now(),
-            # 'total': record.amount_total,
             'status': 'order_received',
-            # 'invoice_id': invoices,
         })
 
-        # Schedule an update after transaction completes
-        # self.env.cr.postcommit.add(lambda: self._update_process_record(record, process_record))
 
         return record
-    
-    # def _update_process_record(self, sale_order, process_record):
-    #     """Update process record with invoice and delivery after they're created"""
-        
-
-    #     # Get invoice using invoice_ids relationship
-    #     invoice = sale_order.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
-
-    #     # Get delivery using picking_ids relationship
-    #     delivery = sale_order.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
-
-    #     if invoice or delivery:
-    #         process_record.write({
-    #             'invoice_id': invoice.id if invoice else False,
-    #             'delivery_id': delivery.id if delivery else False,
-    #         })
