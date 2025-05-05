@@ -23,8 +23,8 @@ class ProcessWIP(models.Model):
         ('done', 'Done')
     ], default='order_received')
 
-    invoice_id = fields.Many2one('account.move',  string="Invoice ID" compute="_compute_invoice_delivery")
-    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note" compute="_compute_invoice_delivery")
+    invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery")
+    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery")
     # invoice_id = fields.Many2one('account.move', related='sale_order_id.invoice_ids', string="Invoice ID")
     # delivery_id = fields.Many2one('stock.picking', related='sale_oder_id.picking_ids', string="Delivery Note")
     
