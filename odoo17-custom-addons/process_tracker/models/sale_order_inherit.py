@@ -36,12 +36,20 @@ class SaleOrderInherit(models.Model):
         wip_start_time = datetime.time(6,0)
         wip_end_time = datetime.time(12, 0)
 
-        invoices = record.invoice_ids
+        # Get the related invoice - since it's automatic, it should be created right away
+        invoice = self.env['account.move'].search([
+            ('invoice_origin', '=', record.name),
+            ('move_type', '=', 'out_invoice')
+        ], limit=1)
 
-        if invoices:
-            invoice_id = invoices[0].id
-        else:
-            invoice_id = None
+        # Get the related delivery note
+        delivery = self.env['stock.picking'].search([
+            ('origin', '=', record.name),
+            ('picking_type_code', '=', 'outgoing')
+        ], limit=1)
+
+        invoice_id = invoice.id if invoice else None
+        delivery_id = delivery.id if delivery else None
 
         if current_time <= wip_end_time and current_time >= wip_start_time:
             model = 'process.wip'
@@ -55,7 +63,8 @@ class SaleOrderInherit(models.Model):
             'created_date': datetime.datetime.now(),
             'total': record.amount_total,
             'status': 'order_received',
-            'invoice_id': invoice_id
+            'invoice_id': invoice_id,
+            'delivery_id': delivery_id,
         })
 
 
