@@ -36,12 +36,10 @@ class SaleOrderInherit(models.Model):
         wip_start_time = datetime.time(6,0)
         wip_end_time = datetime.time(12, 0)
 
-        invoice = record.invoice_ids.filtered(
-            lambda inv: inv.move_type == 'out_invoice' and inv.state != 'cancel'
-        )
+        invoices = record.invoice_ids
 
-        if invoice:
-            invoice_id = invoice[0].id
+        if invoices:
+            invoice_id = invoices[0].id
         else:
             invoice_id = None
 
