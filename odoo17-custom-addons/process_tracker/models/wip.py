@@ -12,7 +12,6 @@ class ProcessWIP(models.Model):
     # fields.Many2one('res.partner' => which model to fetch
     # customer = fields.Char(related='sale_order_id.partner_id.name', string="Customer", readonly=True)
     created_date = fields.Datetime(default=fields.Datetime.now, readonly=True)
-    total = fields.Float(readonly=True)
     status = fields.Selection([
         ('order_received', 'Order Received'), 
         ('kitting', 'Kitting'), 
@@ -23,7 +22,9 @@ class ProcessWIP(models.Model):
         ('done', 'Done')
     ], default='order_received')
 
-    # invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery")
+    # !todo: fix total referencing for wip
+    total = fields.Float(readonly=True)
+    invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery")
     delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery")
     
     # pickup_date = fields.Datetime(string="Courier Pick Up Date")
@@ -35,13 +36,12 @@ class ProcessWIP(models.Model):
     # link to wip logs data history
     wip_log_ids = fields.One2many('process.wip.log', 'wip_id', string="WIP History", readonly="True")
 
-    # @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
-    @api.depends('sale_order_id.picking_ids')
+    @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
     def _compute_invoice_delivery(self):
         for record in self:
-            # invoice = record.sale_order_id.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
+            invoice = record.sale_order_id.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
             delivery = record.sale_order_id.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
-            # record.invoice_id = invoice.id if invoice else False
+            record.invoice_id = invoice.id if invoice else False
             record.delivery_id = delivery.id if delivery else False
 
     def write(self, vals):

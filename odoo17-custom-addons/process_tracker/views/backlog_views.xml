@@ -7,8 +7,8 @@
           <field name="id"  />
           <field name="sale_order_id" />
           <field name="created_date" />
-          <!-- <field name="total" /> -->
-          <!-- <field name="invoice_id" /> -->
+          <field name="total" />
+          <field name="invoice_id" />
           <field name="delivery_id" string="Delivery Note" />
           <field name="status" 
             widget="badge" 
