@@ -69,3 +69,22 @@ class SaleOrderInherit(models.Model):
 
 
         return record
+    
+    def _update_process_record(self, process_record):
+        """Update process record with invoice and delivery after they're created"""
+        self.ensure_one()
+        
+        # Refresh record to get latest related documents
+        self.invalidate_cache()
+        
+        # Get invoice using invoice_ids relationship
+        invoice = self.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
+        
+        # Get delivery using picking_ids relationship
+        delivery = self.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
+
+        if invoice or delivery:
+            process_record.write({
+                'invoice_id': invoice.id if invoice else False,
+                'delivery_id': delivery.id if delivery else False,
+            })
