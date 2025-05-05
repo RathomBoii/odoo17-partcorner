@@ -10,8 +10,8 @@
         <field name="customer" />
         <field name="created_date" />
         <field name="total" />
-        <!-- <field name="invoice_id" string="Invoice ID"/>
-        <field name="delivery_id" string="Delivery Note"/> -->
+        <!-- <field name="invoice_id" string="Invoice ID"/> -->
+        <field name="delivery_id" string="Delivery Note"/> 
         <!-- <field name="pickup_date" string="Courier Pick Up Date" />
         <field name="delivered_date" /> -->
         <field name="status" 
@@ -45,8 +45,8 @@
             <field name="customer"/>
             <field name="created_date"/>
             <field name="total"/>
-            <!-- <field name="invoice_id"/>
-            <field name="delivery_id" string="Delivery Note"/> -->
+            <!-- <field name="invoice_id"/> -->
+            <field name="delivery_id" string="Delivery Note"/>
             <!-- <field name="pickup_date" style="border-bottom: 0.5px solid black;"/>
             <field name="delivered_date" style="border-bottom: 0.5px solid black;"/> -->
             <field name="status" style="border-bottom: 0.5px solid black;"/>

@@ -14,15 +14,16 @@ class ProcessBacklog(models.Model):
     ], default='order_received')
     # total = fields.Float(readonly=True)
     # invoice_id = fields.Many2one('account.move',  string="Invoice ID")
-    # delivery_id = fields.Many2one('stock.picking',  string="Delivery Note")
+    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note")
 
     # @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
-    # def _compute_invoice_delivery(self):
-    #     for record in self:
-    #         invoice = record.sale_order_id.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
-    #         delivery = record.sale_order_id.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
-    #         record.invoice_id = invoice.id if invoice else False
-    #         record.delivery_id = delivery.id if delivery else False
+    @api.depends('sale_order_id.picking_ids')
+    def _compute_invoice_delivery(self):
+        for record in self:
+            # invoice = record.sale_order_id.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
+            delivery = record.sale_order_id.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
+            # record.invoice_id = invoice.id if invoice else False
+            record.delivery_id = delivery.id if delivery else False
 
     def write(self, vals):
         result = super().write(vals)  # Update status first
