@@ -6,7 +6,7 @@
         <field name="sale_order_id"/>
         <field name="status"/>
         <field name="total"/>
-        <field name="invoice_id"/>
+        <!-- <field name="invoice_id"/> -->
       </tree>
     </field>
   </record>
@@ -20,7 +20,7 @@
             <field name="sale_order_id" readonly="1"/>
             <field name="created_date" readonly="1"/>
             <field name="total" readonly="1"/>
-            <field name="invoice_id" readonly="1"/>
+            <!-- <field name="invoice_id" readonly="1"/> -->
             <field name="status"/>
           </group>
           <footer>
