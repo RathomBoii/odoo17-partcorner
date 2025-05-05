@@ -22,9 +22,9 @@ class ProcessWIP(models.Model):
         ('pick_up_by_courier', 'Pick Up By Courier'), 
         ('done', 'Done')
     ], default='order_received')
-    invoice_id = fields.Many2one('account.move', domain=[('move_type', '=', 'out_invoice')], readonly=True, string="Invoice ID")
+    invoice_id = fields.Many2one('account.move', domain=[('move_type', '=', 'out_invoice')], string="Invoice ID")
     delivery_id = fields.Many2one('stock.picking', domain=[('picking_type_code', '=', 'outgoing')], 
-                            readonly=True, string="Delivery Note")
+                            string="Delivery Note")
     pickup_date = fields.Datetime(string="Courier Pick Up Date")
     delivered_date = fields.Datetime()
 

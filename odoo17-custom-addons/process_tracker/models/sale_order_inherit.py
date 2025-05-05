@@ -25,63 +25,40 @@ class SaleOrderInherit(models.Model):
                 order.current_wip_status = ''
 
     @api.model
-    # override Sale.order's create() method
     def create(self, vals):
         record = super().create(vals)
 
         # Set timezone — for Thailand
         tz = pytz.timezone("Asia/Bangkok")
-
         current_time = datetime.datetime.now(tz).time()
-        wip_start_time = datetime.time(6,0)
+        wip_start_time = datetime.time(6, 0)
         wip_end_time = datetime.time(12, 0)
 
-        # Get the related invoice - since it's automatic, it should be created right away
-        invoice = self.env['account.move'].search([
-            ('invoice_origin', '=', record.name),
-            ('move_type', '=', 'out_invoice')
-        ], limit=1)
+        model = 'process.wip' if current_time <= wip_end_time and current_time >= wip_start_time else 'process.backlog'
 
-        # Get the related delivery note
-        delivery = self.env['stock.picking'].search([
-            ('origin', '=', record.name),
-            ('picking_type_code', '=', 'outgoing')
-        ], limit=1)
-
-        invoice_id = invoice.id if invoice else None
-        delivery_id = delivery.id if delivery else None
-
-        if current_time <= wip_end_time and current_time >= wip_start_time:
-            model = 'process.wip'
-        else:
-            model = 'process.backlog'
-
-
-        # compare to JS -> db.model["key"].create
-        self.env[model].create({
+        # Create WIP/Backlog without invoice and delivery initially
+        process_record = self.env[model].create({
             'sale_order_id': record.id,
             'created_date': datetime.datetime.now(),
             'total': record.amount_total,
             'status': 'order_received',
-            'invoice_id': invoice_id,
-            'delivery_id': delivery_id,
         })
 
+        # Schedule an update after transaction completes
+        self.env.cr.postcommit.add(lambda: self._update_process_record(record, process_record))
 
         return record
     
-    def _update_process_record(self, process_record):
+    def _update_process_record(self, sale_order, process_record):
         """Update process record with invoice and delivery after they're created"""
-        self.ensure_one()
-        
         # Refresh record to get latest related documents
-        self.invalidate_cache()
-        
+        sale_order.invalidate_cache()
+
         # Get invoice using invoice_ids relationship
-        invoice = self.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
-        
+        invoice = sale_order.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
+
         # Get delivery using picking_ids relationship
-        delivery = self.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
+        delivery = sale_order.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
 
         if invoice or delivery:
             process_record.write({
