@@ -8,12 +8,12 @@ class ProcessBacklog(models.Model):
     sale_order_id = fields.Many2one('sale.order', required=True, readonly=True)
     customer = fields.Many2one('res.partner', related='sale_order_id.partner_id', string="Customer", readonly=True)
     created_date = fields.Datetime(default=fields.Datetime.now, readonly=True)
-    # total = fields.Float(readonly=True)
     status = fields.Selection([
         ('order_received', 'Order Received'), ('transitioned', 'Transitioned')
     ], default='order_received')
-    # invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery")
-    # delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery")
+    total = fields.Float(readonly=True)
+    invoice_id = fields.Many2one('account.move',  string="Invoice ID")
+    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note")
 
     # @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
     # def _compute_invoice_delivery(self):
@@ -29,10 +29,8 @@ class ProcessBacklog(models.Model):
             for rec in self:
                 self.env['process.wip'].create({
                     'sale_order_id': rec.sale_order_id.id,
-                    'created_date': fields.Datetime.now(),
+                    'created_date': rec.created_date,
                     'status': 'order_received',
-                    # 'total': rec.total,
-                    # 'invoice_id': rec.invoice_id.id,
                 })
         return result
 
