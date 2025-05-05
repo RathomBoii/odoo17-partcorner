@@ -51,8 +51,7 @@ class SaleOrderInherit(models.Model):
     
     def _update_process_record(self, sale_order, process_record):
         """Update process record with invoice and delivery after they're created"""
-        # Refresh record to get latest related documents
-        sale_order.invalidate_cache()
+        
 
         # Get invoice using invoice_ids relationship
         invoice = sale_order.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
