@@ -8,10 +8,10 @@ class ProcessBacklog(models.Model):
     sale_order_id = fields.Many2one('sale.order', required=True, readonly=True)
     customer = fields.Many2one('res.partner', related='sale_order_id.partner_id', string="Customer", readonly=True)
     created_date = fields.Datetime(default=fields.Datetime.now, readonly=True)
-    total = fields.Float(readonly=True)
+    # total = fields.Float(readonly=True)
     status = fields.Selection([
         ('order_received', 'Order Received'), ('transitioned', 'Transitioned')
-    ], default='pending')
+    ], default='order_received')
     # invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery")
     # delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery")
 
@@ -24,16 +24,15 @@ class ProcessBacklog(models.Model):
     #         record.delivery_id = delivery.id if delivery else False
 
     def write(self, vals):
-
         result = super().write(vals)  # Update status first
         if vals.get('status') == 'transitioned':
             for rec in self:
                 self.env['process.wip'].create({
                     'sale_order_id': rec.sale_order_id.id,
                     'created_date': fields.Datetime.now(),
-                    'total': rec.total,
                     'status': 'order_received',
-                    'invoice_id': rec.invoice_id.id,
+                    # 'total': rec.total,
+                    # 'invoice_id': rec.invoice_id.id,
                 })
         return result
 
