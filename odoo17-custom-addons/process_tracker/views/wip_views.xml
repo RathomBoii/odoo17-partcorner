@@ -46,6 +46,7 @@
             <field name="created_date"/>
             <field name="total"/>
             <field name="invoice_id"/>
+            <field name="delivery_id" string="Delivery Note"/>
             <field name="pickup_date" style="border-bottom: 0.5px solid black;"/>
             <field name="delivered_date" style="border-bottom: 0.5px solid black;"/>
             <field name="status" style="border-bottom: 0.5px solid black;"/>
