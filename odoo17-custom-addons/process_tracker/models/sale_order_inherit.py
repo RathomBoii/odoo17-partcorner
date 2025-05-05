@@ -36,12 +36,15 @@ class SaleOrderInherit(models.Model):
 
         model = 'process.wip' if current_time <= wip_end_time and current_time >= wip_start_time else 'process.backlog'
 
+        invoices = self.invoice_ids
+
         # Create WIP/Backlog without invoice and delivery initially
         process_record = self.env[model].create({
             'sale_order_id': record.id,
             'created_date': datetime.datetime.now(),
             'total': record.amount_total,
             'status': 'order_received',
+            'invoice_id': invoices,
         })
 
         # Schedule an update after transaction completes
@@ -49,18 +52,18 @@ class SaleOrderInherit(models.Model):
 
         return record
     
-    def _update_process_record(self, sale_order, process_record):
-        """Update process record with invoice and delivery after they're created"""
+    # def _update_process_record(self, sale_order, process_record):
+    #     """Update process record with invoice and delivery after they're created"""
         
 
-        # Get invoice using invoice_ids relationship
-        invoice = sale_order.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
+    #     # Get invoice using invoice_ids relationship
+    #     invoice = sale_order.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
 
-        # Get delivery using picking_ids relationship
-        delivery = sale_order.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
+    #     # Get delivery using picking_ids relationship
+    #     delivery = sale_order.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
 
-        if invoice or delivery:
-            process_record.write({
-                'invoice_id': invoice.id if invoice else False,
-                'delivery_id': delivery.id if delivery else False,
-            })
+    #     if invoice or delivery:
+    #         process_record.write({
+    #             'invoice_id': invoice.id if invoice else False,
+    #             'delivery_id': delivery.id if delivery else False,
+    #         })
