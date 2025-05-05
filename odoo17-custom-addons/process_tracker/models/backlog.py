@@ -1,5 +1,6 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
+import datetime
 
 class ProcessBacklog(models.Model):
     _name = 'process.backlog'
@@ -11,9 +12,9 @@ class ProcessBacklog(models.Model):
     status = fields.Selection([
         ('order_received', 'Order Received'), ('transitioned', 'Transitioned')
     ], default='order_received')
-    total = fields.Float(readonly=True)
-    invoice_id = fields.Many2one('account.move',  string="Invoice ID")
-    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note")
+    # total = fields.Float(readonly=True)
+    # invoice_id = fields.Many2one('account.move',  string="Invoice ID")
+    # delivery_id = fields.Many2one('stock.picking',  string="Delivery Note")
 
     # @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
     # def _compute_invoice_delivery(self):
@@ -29,7 +30,7 @@ class ProcessBacklog(models.Model):
             for rec in self:
                 self.env['process.wip'].create({
                     'sale_order_id': rec.sale_order_id.id,
-                    'created_date': rec.created_date,
+                    'created_date': datetime.datetime.now(),
                     'status': 'order_received',
                 })
         return result

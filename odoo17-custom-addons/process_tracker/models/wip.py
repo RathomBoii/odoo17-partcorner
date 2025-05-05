@@ -23,11 +23,11 @@ class ProcessWIP(models.Model):
         ('done', 'Done')
     ], default='order_received')
 
-    invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery")
-    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery")
+    # invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery")
+    # delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery")
     
-    pickup_date = fields.Datetime(string="Courier Pick Up Date")
-    delivered_date = fields.Datetime()
+    # pickup_date = fields.Datetime(string="Courier Pick Up Date")
+    # delivered_date = fields.Datetime()
 
     # token for qr code scaning
     token = fields.Char(default=lambda self: str(uuid.uuid4()), readonly=True, copy=False)
@@ -35,13 +35,13 @@ class ProcessWIP(models.Model):
     # link to wip logs data history
     wip_log_ids = fields.One2many('process.wip.log', 'wip_id', string="WIP History", readonly="True")
 
-    @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
-    def _compute_invoice_delivery(self):
-        for record in self:
-            invoice = record.sale_order_id.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
-            delivery = record.sale_order_id.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
-            record.invoice_id = invoice.id if invoice else False
-            record.delivery_id = delivery.id if delivery else False
+    # @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
+    # def _compute_invoice_delivery(self):
+    #     for record in self:
+    #         invoice = record.sale_order_id.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
+    #         delivery = record.sale_order_id.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
+    #         record.invoice_id = invoice.id if invoice else False
+    #         record.delivery_id = delivery.id if delivery else False
 
     def write(self, vals):
         if 'status' in vals:
