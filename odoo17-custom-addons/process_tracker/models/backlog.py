@@ -15,6 +15,9 @@ class ProcessBacklog(models.Model):
         ('order_received', 'Order Received'), ('transitioned', 'Transitioned')
     ], default='pending')
     invoice_id = fields.Many2one('account.move', domain=[('move_type', '=', 'out_invoice')], readonly=True)
+    delivery_id = fields.Many2one('stock.picking', domain=[('picking_type_code', '=', 'outgoing')], 
+                            readonly=True, string="Delivery Note")
+
 
     def write(self, vals):
 
