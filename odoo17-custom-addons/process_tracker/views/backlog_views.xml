@@ -9,6 +9,7 @@
           <field name="created_date" />
           <field name="total" />
           <field name="invoice_id" />
+          <field name="delivery_id" string="Delivery Note" />
           <field name="status" 
             widget="badge" 
             decoration-danger="status == 'order_received'"
