@@ -48,7 +48,7 @@ class SaleOrderInherit(models.Model):
         })
 
         # Schedule an update after transaction completes
-        self.env.cr.postcommit.add(lambda: self._update_process_record(record, process_record))
+        # self.env.cr.postcommit.add(lambda: self._update_process_record(record, process_record))
 
         return record
     
