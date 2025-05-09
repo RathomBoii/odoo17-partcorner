@@ -13,17 +13,19 @@ class ProcessBacklog(models.Model):
         ('order_received', 'Order Received'), ('transitioned', 'Transitioned')
     ], default='order_received')
     # !todo: fix total, invoice, delivery note referencing for backlog
-    total = fields.Float(readonly=True)
-    invoice_id = fields.Many2one('account.move',  string="Invoice ID")
-    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note")
+    total = fields.Float(readonly=True, compute="_compute_invoice_delivery_total")
+    invoice_id = fields.Many2one('account.move',  string="Invoice ID",  compute="_compute_invoice_delivery_total" )
+    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery_total")
 
     @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
-    def _compute_invoice_delivery(self):
+    def _compute_invoice_delivery_total(self):
         for record in self:
             invoice = record.sale_order_id.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
             delivery = record.sale_order_id.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
+            total = record.sale_order_id.amount_total
             record.invoice_id = invoice.id if invoice else False
             record.delivery_id = delivery.id if delivery else False
+            record.total = total if total else False
 
     def write(self, vals):
         result = super().write(vals)  # Update status first
