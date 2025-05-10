@@ -24,8 +24,8 @@ class ProcessWIP(models.Model):
 
     # !todo: fix total referencing for wip
     total = fields.Float(readonly=True, compute="_compute_invoice_delivery_total")
-    invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery")
-    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery")
+    invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery_total")
+    delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery_total")
     
     # pickup_date = fields.Datetime(string="Courier Pick Up Date")
     # delivered_date = fields.Datetime()

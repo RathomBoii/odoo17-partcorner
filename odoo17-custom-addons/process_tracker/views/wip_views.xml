@@ -4,7 +4,8 @@
     <field name="name">process.wip.tree.view</field>
     <field name="model">process.wip</field>
     <field name="arch" type="xml">
-      <tree string="WIP" default_order="created_date desc">
+      <!-- <tree string="WIP" default_order="created_date desc" create="false"> -->
+      <tree string="WIP" create="false">
         <field name="id" />
         <field name="sale_order_id" />
         <field name="customer" />
@@ -55,7 +56,7 @@
           <notebook>
             <page string="History Logs">
               <field name="wip_log_ids">
-                <tree string="WIP Logs">
+                <tree string="WIP Logs" create="false">
                   <field name="changed_at"/>
                   <field name="previous_status"/>
                   <field name="current_status"/>

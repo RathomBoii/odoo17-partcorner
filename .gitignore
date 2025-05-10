@@ -1,6 +1,6 @@
-*.deb
-*env
-/odoo
+/debian
+/dev
+/odoo17
 
 # sphinx build directories
 _build/

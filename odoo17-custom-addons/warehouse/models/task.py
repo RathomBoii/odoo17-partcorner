@@ -28,6 +28,9 @@ class WarehouseTask(models.Model):
             'pick_up_by_courier': ['done'],
             'done': []
         }
+    
+    delivery_id = fields.Many2one('stock.picking',  related='process_wip_id.delivery_id')
+
 
 
     def write(self, vals):

@@ -3,5 +3,6 @@
         <field name="name">Task</field>
         <field name="res_model">warehouse.task</field>
         <field name="view_mode">tree,form</field>
+        <field name="context">{"search_default_exclude_done":1}</field>
     </record>
 </odoo>

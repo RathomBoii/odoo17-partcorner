@@ -1,0 +1,7 @@
+docker run -d -p 5432:5432 --name=odoo -e POSTGRES_PASSWORD=admin  postgres16
+
+CREATE USER odoo WITH PASSWORD 'odoo' SUPERUSER;
+
+python3 -m venv dev
+
+source <venv>/bin/activate

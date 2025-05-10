@@ -3,7 +3,7 @@
       <field name="name">process.backlog.tree.view</field>
       <field name="model">process.backlog</field>
       <field name="arch" type="xml">
-        <tree string="Backlog" default_order="created_date desc">
+        <tree string="Backlog" create="false">
           <field name="id"  />
           <field name="sale_order_id" />
           <field name="created_date" />

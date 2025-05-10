@@ -11,8 +11,12 @@ class SaleOrderInherit(models.Model):
     def _compute_current_wip_status(self):
         status_display_map = {
             'order_received': 'Preparing',
+            'kitting': 'Preparing',
+            'checking': 'Preparing',
+            'packing': 'Packing',
             'booking': 'On Delivery',
-            'pick_up_by_courier': 'On delivery'
+            'pick_up_by_courier': 'On delivery',
+            'done': 'Delivered'
         }
         for order in self:
             latest_wip = self.env['process.wip'].search([
