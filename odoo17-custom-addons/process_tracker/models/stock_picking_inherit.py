@@ -15,7 +15,8 @@ class SockPickingInherit(models.Model):
                 (
                     'delivery_id', '=', picking.id
                 )
-            ])
+                
+            ], limit=1)
 
             if related_wip:
                 related_wip.write({'status': 'kitting'})
