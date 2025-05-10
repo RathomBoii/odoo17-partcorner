@@ -17,6 +17,7 @@ class SockPickingInherit(models.Model):
                 )
             ])
 
-            related_wip.write({'status': 'kitting'}) if related_wip else False
+            if related_wip:
+                related_wip.write({'status': 'kitting'})
 
         return res
