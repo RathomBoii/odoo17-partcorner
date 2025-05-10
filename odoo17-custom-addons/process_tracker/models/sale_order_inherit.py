@@ -56,30 +56,4 @@ class SaleOrderInherit(models.Model):
             'status': 'order_received',
         })
 
-
-
-        # picking_ids = record.sale_order_id.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
-        picking_ids = record.sale_order_id.picking_ids
-
-        # correct_picking_ids =  picking_ids.mapped('package_level_ids').filtered(lambda pl: pl.state == 'draft' and not pl.move_ids)
-
-        # Auto-validate the picking
-        try:
-            # picking.action_confirm()  # Confirm the picking
-            # picking.action_assign()   # Assign the picking (reserve products)
-            # # Check if the picking is ready to be processed
-            # if picking.state in ('assigned', 'partially_available', 'waiting'): #modified condition
-            #     # Process the picking to create move lines if they don't exist
-            #     if not picking.move_line_ids:
-            #         picking.action_generate_picking_lines()
-
-            #     # Loop through each move line and set the quantity done
-            #     for move_line in picking.move_line_ids:
-            #         move_line.qty_done = move_line.product_uom_qty
-                for picking_id in picking_ids:
-                    picking_id.action_done()        # Validate the picking
-        except Exception as e:
-            # Handle any errors during validation
-            raise UserError(f"Error auto-validating picking {picking_id.name}: {e}")
-
         return record

@@ -22,7 +22,6 @@ class ProcessWIP(models.Model):
         ('done', 'Done')
     ], default='order_received')
 
-    # !todo: fix total referencing for wip
     total = fields.Float(readonly=True, compute="_compute_invoice_delivery_total")
     invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery_total")
     delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery_total")
@@ -79,6 +78,6 @@ class ProcessWIP(models.Model):
                 preferred_status = record.status
                 previous_status = record._origin.status
                 is_valid_transition = preferred_status in allowed_status_transition_dict.get(previous_status,[])
-                # if not is_valid_transition:
-                #     raise ValidationError(f"ไม่สามารถเปลี่ยน status ข้ามขั้นตอนได้ จาก {previous_status} ไปสู่ {record.status}.")
+                if not is_valid_transition:
+                    raise ValidationError(f"ไม่สามารถเปลี่ยน status ข้ามขั้นตอนได้ จาก {previous_status} ไปสู่ {record.status}.")
     
