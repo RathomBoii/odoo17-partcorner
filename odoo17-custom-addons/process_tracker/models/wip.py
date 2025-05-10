@@ -36,6 +36,10 @@ class ProcessWIP(models.Model):
     # link to wip logs data history
     wip_log_ids = fields.One2many('process.wip.log', 'wip_id', string="WIP History", readonly="True")
 
+    _sql_constraints = [
+        ('unique_sale_order_id', 'unique(sale_order_id)', 'A WIP record can only be created for a sale order once.')
+    ]
+
     @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
     def _compute_invoice_delivery_total(self):
         for record in self:
