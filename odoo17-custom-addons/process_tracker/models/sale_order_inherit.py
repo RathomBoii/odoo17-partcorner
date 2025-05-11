@@ -8,6 +8,19 @@ class SaleOrderInherit(models.Model):
 
     current_wip_status = fields.Char(string="WIP Status", compute="_compute_current_wip_status")
 
+    def action_confirm(self):
+        res = super().action_confirm()
+
+        for sale_order in self:
+            delivery_notes = self.env['stock.picking'].search(
+                [
+                    ('origin', '=', sale_order.name )
+                ]
+            )
+            for delivery_note in delivery_notes:
+                delivery_note.button_validate()
+        return res
+
 
     @api.depends('order_line')  # anything to trigger recompute; you can adjust this
     def _compute_current_wip_status(self):
