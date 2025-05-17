@@ -31,15 +31,15 @@ class WarehouseTask(models.Model):
         store=True  # Important for searching and potentially better performance
     )
 
-    delivery_contact_name = fields.Char(related='shipping_partner_id.name', string="Delivery Contact", readonly=True, store=True)
-    delivery_phone = fields.Char(related='shipping_partner_id.phone', string="Delivery Phone", readonly=True, store=True)
-    delivery_email = fields.Char(related='shipping_partner_id.email', string="Delivery Email", readonly=True, store=True)
-    delivery_street = fields.Char(related='shipping_partner_id.street', string="Delivery Street", readonly=True, store=True)
-    delivery_street2 = fields.Char(related='shipping_partner_id.street2', string="Delivery Street 2", readonly=True, store=True)
-    delivery_city = fields.Char(related='shipping_partner_id.city', string="Delivery City", readonly=True, store=True)
-    delivery_state_id = fields.Many2one(related='shipping_partner_id.state_id', string="Delivery State", readonly=True, store=True)
-    delivery_zip = fields.Char(related='shipping_partner_id.zip', string="Delivery Zip", readonly=True, store=True)
-    delivery_country_id = fields.Many2one(related='shipping_partner_id.country_id', string="Delivery Country", readonly=True, store=True)
+    delivery_contact_name = fields.Char(related='shipping_partner_id.name', string="Contact", readonly=True, store=True)
+    delivery_phone = fields.Char(related='shipping_partner_id.phone', string="Phone", readonly=True, store=True)
+    delivery_email = fields.Char(related='shipping_partner_id.email', string="Email", readonly=True, store=True)
+    delivery_street = fields.Char(related='shipping_partner_id.street', string="Street", readonly=True, store=True)
+    delivery_street2 = fields.Char(related='shipping_partner_id.street2', string="Street 2", readonly=True, store=True)
+    delivery_city = fields.Char(related='shipping_partner_id.city', string="City", readonly=True, store=True)
+    delivery_state_id = fields.Many2one(related='shipping_partner_id.state_id', string="State", readonly=True, store=True)
+    delivery_zip = fields.Char(related='shipping_partner_id.zip', string="ZIP Code", readonly=True, store=True)
+    delivery_country_id = fields.Many2one(related='shipping_partner_id.country_id', string="Country", readonly=True, store=True)
 
 
 
