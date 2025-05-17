@@ -18,10 +18,60 @@
                             <field name="status" style="border-bottom: 0.5px solid black;"/>
                             <!-- <field name="previous_status" readonly="1"/> -->
                             <field name="sale_order_id" readonly="1"/>
+                            <field name="customer" readonly="1"/>
                             <field name="process_wip_id" readonly="1"/>
                             <field name="name"  readonly="1"/>
                             <field name="assignee"/>
                         </group>
+
+                        <!-- Customer Section -->
+                        <group string="Delivery Information">
+                            <field name="shipping_partner_id" widget="res_partner_many2one"/>
+                            <field name="delivery_contact_name" class="oe_inline"/>
+                            <field name="delivery_phone" class="oe_inline"/>
+                                <field name="delivery_email" widget="email" class="oe_inline"/>
+                            <field name="delivery_street"/>
+                            <field name="delivery_street2"/>
+                            <field name="delivery_city" class="oe_inline"/>
+                            <field name="delivery_state_id" class="oe_inline" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="delivery_zip" class="oe_inline"/>
+                            <field name="delivery_country_id" options="{'no_open': True, 'no_create': True}"/> 
+                            <!-- <div class="o_row">
+                                <field name="delivery_contact_name" class="oe_inline"/>
+                                <button name='copy_delivery_contact_name' type="button" string="Copy" class="oe_link" data-oe-model="warehouse.task" data-oe-field="delivery_contact_name" data-oe-copy="1"/>
+                            </div> -->
+                            <!-- <div style="display:flex; width:100%; border: 1px solid red;">
+                                <field name="delivery_phone" class="oe_inline"/>
+                                <button name='copy_delivery_phone' type="button" string="Copy" class="oe_link" data-oe-model="warehouse.task" data-oe-field="delivery_phone" data-oe-copy="1"/>
+                            </div> -->
+                            <!-- <div class="o_row">
+                                <field name="delivery_email" widget="email" class="oe_inline"/>
+                                <button name='copy_delivery_email' type="button" string="Copy" class="oe_link" data-oe-model="warehouse.task" data-oe-field="delivery_email" data-oe-copy="1"/>
+                            </div>
+                            <field name="delivery_street"/>
+                            <field name="delivery_street2"/>
+                            <div class="o_row">
+                                <field name="delivery_city" class="oe_inline"/>
+                                <field name="delivery_state_id" class="oe_inline" options="{'no_open': True, 'no_create': True}"/>
+                                <field name="delivery_zip" class="oe_inline"/>
+                            </div>
+                            <field name="delivery_country_id" options="{'no_open': True, 'no_create': True}"/> -->
+                        </group>
+                        <notebook>
+                            <page string="Create Flash Express Oder">
+                                
+                            </page>
+                            <page string="Print Flash Express Label">
+                                
+                            </page>
+                            <page string="Call Flash Express Courier">
+                                
+                            </page>
+                            <page string="Flash Express Status">
+                                
+                            </page>
+                        </notebook>
+
                     </sheet>
                 </form>
             </field>
