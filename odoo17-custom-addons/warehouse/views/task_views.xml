@@ -26,40 +26,48 @@
 
                         <!-- Customer Section -->
                         <group string="Delivery Information">
-                            <field name="shipping_partner_id" widget="res_partner_many2one"/>
-                            <field name="delivery_contact_name" class="oe_inline"/>
-                            <field name="delivery_phone" class="oe_inline"/>
-                                <field name="delivery_email" widget="email" class="oe_inline"/>
-                            <field name="delivery_street"/>
-                            <field name="delivery_street2"/>
-                            <field name="delivery_city" class="oe_inline"/>
-                            <field name="delivery_state_id" class="oe_inline" options="{'no_open': True, 'no_create': True}"/>
-                            <field name="delivery_zip" class="oe_inline"/>
+                            <field name="shipping_partner_id" class="oe_inline"/>
+                            <field name="delivery_contact_name" class="oe_inline" widget="CopyClipboardChar"/>
+                            <field name="delivery_phone" class="oe_inline" widget="CopyClipboardChar"/>
+                            <field name="delivery_email" widget="email" class="oe_inline"/>
+                            <field name="delivery_street" class="oe_inline" widget="CopyClipboardChar"/>
+                            <field name="delivery_street2" class="oe_inline" widget="CopyClipboardChar"/>
+                            <field name="delivery_city" class="oe_inline" widget="CopyClipboardChar"/>
+                            <field name="delivery_zip" class="oe_inline" widget="CopyClipboardChar"/>
                             <field name="delivery_country_id" options="{'no_open': True, 'no_create': True}"/> 
+                            <!-- <button name="log_system_parameter"  
+                                    type="object"
+                                    string="log test"
+                            />
+                            <button name="test_construct_api_request"  
+                                    type="object"
+                                    string="test_construct_api_request"
+                            /> -->
                             <!-- <div class="o_row">
                                 <field name="delivery_contact_name" class="oe_inline"/>
                                 <button name='copy_delivery_contact_name' type="button" string="Copy" class="oe_link" data-oe-model="warehouse.task" data-oe-field="delivery_contact_name" data-oe-copy="1"/>
                             </div> -->
-                            <!-- <div style="display:flex; width:100%; border: 1px solid red;">
-                                <field name="delivery_phone" class="oe_inline"/>
-                                <button name='copy_delivery_phone' type="button" string="Copy" class="oe_link" data-oe-model="warehouse.task" data-oe-field="delivery_phone" data-oe-copy="1"/>
-                            </div> -->
-                            <!-- <div class="o_row">
-                                <field name="delivery_email" widget="email" class="oe_inline"/>
-                                <button name='copy_delivery_email' type="button" string="Copy" class="oe_link" data-oe-model="warehouse.task" data-oe-field="delivery_email" data-oe-copy="1"/>
-                            </div>
-                            <field name="delivery_street"/>
-                            <field name="delivery_street2"/>
-                            <div class="o_row">
-                                <field name="delivery_city" class="oe_inline"/>
-                                <field name="delivery_state_id" class="oe_inline" options="{'no_open': True, 'no_create': True}"/>
-                                <field name="delivery_zip" class="oe_inline"/>
-                            </div>
-                            <field name="delivery_country_id" options="{'no_open': True, 'no_create': True}"/> -->
                         </group>
                         <notebook>
                             <page string="Create Flash Express Oder">
-                                
+                                <group>
+                                    <field name="out_trade_no"/>  
+                                    <field name="dst_name"/>  
+                                    <field name="dst_phone"/>  
+                                    <field name="dst_province_name"/>  
+                                    <field name="dst_city_name"/>  
+                                    <field name="dst_postal_code"/>  
+                                    <field name="dst_detail_address"/>  
+                                    <field name="express_category"/>  
+                                    <field name="article_category"/>  
+                                    <field name="weight"/>  
+                                    <field name="insured"/>  
+                                    <field name="cod_enabled"/>  
+                                    <button name="trigger_async_post"  
+                                        type="object"
+                                        string="สร้าง Flash Order"
+                                    />
+                                </group>
                             </page>
                             <page string="Print Flash Express Label">
                                 
