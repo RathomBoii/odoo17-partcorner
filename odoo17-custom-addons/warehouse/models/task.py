@@ -7,6 +7,7 @@ import string
 import aiohttp
 import asyncio
 import json
+import base64
 
 _logger = logging.getLogger(__name__)
 
@@ -82,7 +83,11 @@ class WarehouseTask(models.Model):
     dst_detail_address = fields.Char(string="ที่อยู่โดยละเอียดของผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
 
     delivery_order_id = fields.Char(string="หมายเลขการจัดส่ง", compute="_compute_flash_api_params", store=True, readonly=True)
-    message_post = fields.Char(string="Message Post" , store=True, readonly=True)
+    message_create_post = fields.Char(string="Message For Created Flash Express Order" , store=True, readonly=True)
+    
+    message_print_label = fields.Char(string="Message For Print Flash Express Label" , store=True, readonly=True)
+    printed_label_pdf = fields.Binary(string="Label File (PDF):", readonly=True, attachment=False)
+    printed_label_filename = fields.Char(string="Label Filename", readonly=True, default="flash_label.pdf")
     
     @api.depends('sale_order_id', 'shipping_partner_id') # Add relevant dependencies
     def _compute_flash_api_params(self):
@@ -214,6 +219,7 @@ class WarehouseTask(models.Model):
     # --- END: Helper Methods for Signature Generation ---
 
 
+    # --- START: create Flash Express Order API Call --- 
     async def _call_flash_express_create_order_api(self, session, payload_with_signature):
         """ Makes the actual asynchronous POST request to Flash Express API. """
         
@@ -285,7 +291,7 @@ class WarehouseTask(models.Model):
             raise UserError(f"An unexpected error occurred while contacting Flash Express: {e}")
 
 
-    async def _prepare_and_call_flash_express_api_async(self, session):
+    async def _prepare_and_call_create_flash_express_api_async(self, session):
         self.ensure_one()
         _logger.info(f"Starting Flash Express order creation process for task: {self.name or self.id}")
 
@@ -358,14 +364,14 @@ class WarehouseTask(models.Model):
 
     def action_create_flash_express_order(self):
         # --- using asyncio.run() or loop.run_until_complete() to call ---
-        # --- _prepare_and_call_flash_express_api_async ---
+        # --- _prepare_and_call_create_flash_express_api_async ---
         # --- and then processing the result.                            ---
         self.ensure_one()
         _logger.info(f"User triggered Flash Express order creation for task: {self.name or self.id}")
 
         async def main_async_wrapper():
             async with aiohttp.ClientSession() as session: # Session created per call
-                return await self._prepare_and_call_flash_express_api_async(session)
+                return await self._prepare_and_call_create_flash_express_api_async(session)
         try:
             # Simplified asyncio.run() call for this example
             # Proper event loop management in Odoo might require more nuance based on version
@@ -377,27 +383,182 @@ class WarehouseTask(models.Model):
                     # ... (process successful response as before) ...
                     api_data = result.get("data")
                     pno = api_data.get("pno")
-                    self.message_post = f"Flash Express order created successfully! PNO: {pno}"
+                    self.message_create_post = f"Flash Express order created successfully! PNO: {pno}"
                     self.delivery_order_id = pno # Assuming this is the delivery order ID
                 else:
                     error_message = result.get("message", "API call failed or returned unexpected data.")
                     _logger.error(f"Flash Express API Error: {error_message} - Full Response: {result}")
-                    self.message_post = f"Flash Express API Error: {error_message}"
+                    self.message_create_post = f"Flash Express API Error: {error_message}"
             else:
                 _logger.error(f"Flash Express API call returned an unexpected result: {result}")
-                self.message_post = "Flash Express API call returned an unexpected result."
+                self.message_create_post = "Flash Express API call returned an unexpected result."
 
         except UserError as ue:
             _logger.error(f"UserError: {ue}")
-            self.message_post =f"Error: {str(ue)}"
+            self.message_create_post =f"Error: {str(ue)}"
         except ValidationError as ve:
             _logger.error(f"ValidationError: {ve}")
-            self.message_post =f"Validation Error: {str(ve)}"
+            self.message_create_post =f"Validation Error: {str(ve)}"
         except Exception as e:
             _logger.error(f"Unexpected error: {e}", exc_info=True)
-            self.message_post =f"An unexpected system error occurred: {str(e)}"
+            self.message_create_post =f"An unexpected system error occurred: {str(e)}"
         return True
+    # --- END: create Flash Express Order API Call ---
+
+    # --- START: Print Flash Express Order API Call ---
+    async def _call_flash_express_print_label_api(self, session, payload_with_signature):
+        """ Makes the actual asynchronous POST request to Flash Express API for printing labels. """
+        
+        if not self.delivery_order_id: # This field should store the PNO
+            _logger.error("Flash Express PNO (self.delivery_order_id) not set. Cannot print label.")
+            raise UserError("Flash Express PNO (tracking number) is not set on this task.")
+        
+        api_env = self._get_system_parameter("api_env") or 'TRAIN' # Ensure 'flash_express.api_env' parameter exists
+        base_url = ""
+        if api_env.upper() == 'PROD':
+            base_url = self._get_system_parameter("prod_base_url") # Ensure 'flash_express.prod_base_url'
+        else: # Default to training
+            base_url = self._get_system_parameter("train_base_url") # Ensure 'flash_express.train_base_url'
+
+        if not base_url:
+            _logger.error("Flash Express API base URL is not configured in system parameters.")
+            raise UserError("Flash Express API base URL is not configured.")
+
+        api_endpoint = f"/open/v1/orders/{self.delivery_order_id}/small/pre_print" # self.delivery_order_id is the PNO
+        api_url = f"{base_url.rstrip('/')}{api_endpoint}"
+        
+        # Specify Content-Type for the request and Accept for the expected PDF response
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/pdf, */*' # As per spec
+        }
+
+        _logger.info(f"AIOHTTP: Sending POST request to {api_url} for PDF label")
+        _logger.debug(f"AIOHTTP: Payload for POST (form-urlencoded): {payload_with_signature}")
+
+        try:
+            async with session.post(api_url, data=payload_with_signature, headers=headers, timeout=60) as response: # Increased timeout for file
+                response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+                
+                # Read the PDF content as bytes
+                pdf_bytes = await response.read()
+                _logger.info(f"AIOHTTP: Successfully received PDF stream. Size: {len(pdf_bytes)} bytes.")
+                
+                if not pdf_bytes:
+                    _logger.warning(f"AIOHTTP: Received empty PDF response from {api_url}")
+                    raise UserError("Received an empty PDF response from Flash Express.")
+                
+                return pdf_bytes # Return the raw PDF bytes
+        
+        except aiohttp.ClientResponseError as e:
+            # Try to read error response body if possible
+            error_body = await e.response.text() if hasattr(e, 'response') and e.response else e.message
+            _logger.error(f"AIOHTTP: HTTP error {e.status} during Flash Express print label API call: {e.message}. Response body: {error_body}")
+            raise UserError(f"Flash Express API Error ({e.status}) while printing label: {e.message}. Details: {error_body[:200]}")
+        except asyncio.TimeoutError:
+            _logger.error("AIOHTTP: Request to Flash Express print label API timed out.")
+            raise UserError("The request to Flash Express (print label) timed out. Please try again later.")
+        except aiohttp.ClientError as e: # Catch other client errors like connection issues
+            _logger.error(f"AIOHTTP: ClientError during Flash Express print label API call: {e}")
+            raise UserError(f"Could not connect to Flash Express (print label): {e}")
+        except Exception as e:
+            _logger.error(f"AIOHTTP: An unexpected error occurred during Flash Express print label API call: {e}", exc_info=True)
+            raise UserError(f"An unexpected error occurred while contacting Flash Express for printing label: {e}")
 
 
+    async def _prepare_and_call_print_label_flash_express_api_async(self, session):
+        self.ensure_one()
+        _logger.info(f"Starting Flash Express print label preparation for task: {self.name or self.id}")
+
+        api_env_setting = self._get_system_parameter("api_env") or 'TRAIN'
+        credential_env_prefix = 'prod' if api_env_setting.upper() == 'PROD' else 'dev'
+        
+        _logger.info(f"Print Label: API Env: {api_env_setting}, Credential Prefix: {credential_env_prefix}")
+
+        mch_id = self._get_system_parameter("mch_id", credential_env_prefix)
+        secret_key = self._get_system_parameter("secret_key", credential_env_prefix)
+
+        if not mch_id: 
+            raise UserError(f"Flash Express MCH ID for env '{credential_env_prefix}' not configured.")
+        if not secret_key: 
+            raise UserError(f"Flash Express Secret Key for env '{credential_env_prefix}' not configured.")
+
+        # Payload for printing requires mchId, nonceStr, and sign.
+        # pno is a path variable and NOT part of the signature calculation.
+        payload_body_for_signing = {
+            "mchId": str(mch_id),
+            "nonceStr": self._create_random_string(32),
+        }
+        _logger.debug(f"AIOHTTP Print Label: Payload body for signing: {payload_body_for_signing}")
+
+        data_to_sign_filtered = self._filter_null_key_value(payload_body_for_signing.copy())
+        key_value_request_string = self._construct_key_value_string(data_to_sign_filtered)
+        presign_string = self._construct_presign_string(key_value_request_string, secret_key)
+        
+        encoded_signature = self._sha256_encode(presign_string)
+        final_api_signature = self._transform_string_to_upper_case(encoded_signature)
+        
+        final_payload_for_post = payload_body_for_signing.copy()
+        final_payload_for_post["sign"] = final_api_signature
+        _logger.info(f"AIOHTTP Print Label: final_payload_for_post: {final_payload_for_post}")
+
+        return await self._call_flash_express_print_label_api(session, final_payload_for_post)
+
+    def action_print_label_flash_express_order(self):
+        self.ensure_one()
+        _logger.info(f"User triggered Flash Express print label for task: {self.name or self.id} (PNO: {self.delivery_order_id})")
+
+        if not self.delivery_order_id:
+            # self.message_post(body="<b>Error:</b> Flash Express PNO (Tracking ID) is not set for this task. Cannot print label.")
+            raise UserError("Flash Express PNO (Tracking ID) is not set for this task. Please ensure the order was created with Flash Express first and the PNO is stored.")
+
+        async def main_async_wrapper():
+            # Using a new session per call; consider sharing if making many calls in sequence.
+            async with aiohttp.ClientSession() as session:
+                return await self._prepare_and_call_print_label_flash_express_api_async(session)
+        try:
+            # asyncio.run() is fine for simple cases in Odoo actions.
+            pdf_bytes = asyncio.run(main_async_wrapper())
+            
+            if pdf_bytes:
+                pdf_base64 = base64.b64encode(pdf_bytes)
+                filename = f"FlashLabel_{self.delivery_order_id.replace('/', '_')}_{self.name.replace('/', '_')}.pdf"
+                
+                self.write({
+                    'printed_label_pdf': pdf_base64,
+                    'printed_label_filename': filename,
+                    # 'message_print_label': "Label PDF successfully retrieved." # Update your status field
+                })
+                # self.message_post(body=f"<b>Success:</b> Flash Express label for PNO <i>{self.delivery_order_id}</i> successfully retrieved and stored ({len(pdf_bytes)} bytes).")
+                
+                # Return an action to download the file
+                return {
+                    'type': 'ir.actions.act_url',
+                    'url': f'/web/content/{self._name}/{self.id}/printed_label_pdf?download=true&filename={self.printed_label_filename}',
+                    'target': 'self', # Opens in current tab/frame; use 'new' for new tab
+                }
+            else:
+                # This case should ideally be caught earlier by raise_for_status or empty PDF check
+                _logger.error("Flash Express API call for label returned no data where PDF was expected.")
+                # self.message_post(body="<b>Error:</b> Flash Express API call for label returned no data.")
+                # self.message_print_label = "Flash Express API call returned an empty result."
+                return False # Or raise UserError
+
+        except UserError as ue:
+            _logger.error(f"UserError during print label for PNO {self.delivery_order_id}: {ue}")
+            # self.message_post(body=f"<b>User Error:</b> {str(ue)}")
+            # self.message_print_label = f"Error: {str(ue)}"
+            # Re-raise to show to user, or handle gracefully if preferred
+            # raise 
+        except ValidationError as ve:
+            _logger.error(f"ValidationError during print label for PNO {self.delivery_order_id}: {ve}")
+            # self.message_post(body=f"<b>Validation Error:</b> {str(ve)}")
+            # self.message_print_label = f"Validation Error: {str(ve)}"
+        except Exception as e: # Catch other exceptions like aiohttp errors if not caught specifically above
+            _logger.error(f"Unexpected error during print label for PNO {self.delivery_order_id}: {e}", exc_info=True)
+            # self.message_post(body=f"<b>System Error:</b> An unexpected error occurred while printing the label. Please check logs. ({type(e).__name__})")
+            # self.message_print_label = f"An unexpected system error occurred: {str(e)}"
+        return False # Fallback if no download action is returned
+    # -- END: Print Flash Express Order API Call ---
 
 

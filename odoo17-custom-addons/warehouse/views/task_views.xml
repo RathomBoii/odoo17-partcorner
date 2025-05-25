@@ -39,7 +39,7 @@
                         <notebook>
                             <page string="Create Flash Express Oder">
                                 <group>
-                                    <field name="out_trade_no"/>  
+                                    <field name="out_trade_no" class="oe_inline"/>  
                                     <field name="dst_name"/>  
                                     <field name="dst_phone"/>  
                                     <field name="dst_province_name"/>  
@@ -50,23 +50,32 @@
                                     <field name="article_category"/>  
                                     <field name="weight"/>  
                                     <field name="insured"/>  
-                                    <field name="cod_enabled"/>  
-                                    <group>
-                                        <div style=" width: 500px; justify-content: start; display: flex; align-items: center; margin-top: 20px;">
-                                            <button name="action_create_flash_express_order"  
-                                            type="object"
-                                            string="สร้าง Flash Order"
-                                            />
-                                        </div>
-                                    </group>
-                                </group>
-                                <group style="width: 500px;">
-                                    <field name="message_post"/>  
+                                    <field name="cod_enabled"/> 
+                                    <field name="message_create_post"/>  
                                     <field name="delivery_order_id"  widget="CopyClipboardChar"/> 
+                                </group>
+                                <group>
+                                    <div style=" width: 500px; justify-content: start; display: flex; align-items: center; margin-top: 20px;">
+                                        <button name="action_create_flash_express_order"  
+                                        type="object"
+                                        string="สร้าง Flash Order"
+                                        />
+                                    </div>
                                 </group>
                             </page>
                             <page string="Print Flash Express Label">
-                                
+                                <group>
+                                    <field name="printed_label_pdf"/>  
+                                    <field name="printed_label_filename"/>  
+                                </group>
+                                <group>
+                                    <div style=" width: 500px; justify-content: start; display: flex; align-items: center; margin-top: 20px;">
+                                        <button name="action_print_label_flash_express_order"  
+                                        type="object"
+                                        string="Print Flash Order Label"
+                                        />
+                                    </div>
+                                </group>
                             </page>
                             <page string="Call Flash Express Courier">
                                 
