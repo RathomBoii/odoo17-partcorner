@@ -3,7 +3,14 @@
     'author': 'James Jessada',
     'version': '1.0',
     'category': 'Operations',
-    'depends': ['sale_management', 'account', 'base', 'portal', 'process_tracker'],
+    'depends': [
+        'sale_management', 
+        'account', 
+        'base', 
+        'portal', 
+        'process_tracker', 
+        'mail'
+    ],
     'data': [
         'security/ir.model.access.csv',
         'views/actions.xml',

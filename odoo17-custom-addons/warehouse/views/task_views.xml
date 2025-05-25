@@ -63,7 +63,7 @@
                                     <field name="weight"/>  
                                     <field name="insured"/>  
                                     <field name="cod_enabled"/>  
-                                    <button name="trigger_async_post"  
+                                    <button name="action_create_flash_express_order"  
                                         type="object"
                                         string="สร้าง Flash Order"
                                     />
