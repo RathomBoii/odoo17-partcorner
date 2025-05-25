@@ -81,7 +81,20 @@
                                 
                             </page>
                             <page string="Flash Express Status">
-                                
+                                <group>
+                                    <field name="flash_parcel_state_code" readonly="1"/>
+                                    <field name="flash_parcel_state_text" readonly="1"/>
+                                    <field name="flash_parcel_state_change_at" readonly="1"/>
+                                    <field name="flash_parcel_routes_details" readonly="1" height="150"/> 
+                                </group>
+                                <group>
+                                    <div style=" width: 500px; justify-content: start; display: flex; align-items: center; margin-top: 20px;">
+                                        <button name="action_check_flash_status"  
+                                        type="object"
+                                        string="Get Flash Express Status"
+                                        />
+                                    </div>
+                                </group>
                             </page>
                         </notebook>
 

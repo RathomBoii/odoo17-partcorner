@@ -2,3 +2,6 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 warehouse_task,warehouse.task,model_warehouse_task,,1,1,1,1
 warehouse_task_manager,warehouse.task.manager,model_warehouse_task,,1,1,1,1
 warehouse_task_user,warehouse.task.user,model_warehouse_task,,1,0,0,0
+warehouse_pickup_request,warehouse.pickup_request,model_warehouse_pickup_request,,1,1,1,1
+warehouse_pickup_request_manager,warehouse.pickup_request.manager,model_warehouse_pickup_request,,1,1,1,1
+warehouse_pickup_request_user,warehouse.pickup_request.user,model_warehouse_pickup_request,,1,0,0,0

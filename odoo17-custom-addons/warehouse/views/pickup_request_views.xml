@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_warehouse_pickup_request_form" model="ir.ui.view">
+            <field name="name">warehouse.pickup_request.form</field>
+            <field name="model">warehouse.pickup_request</field>
+            <field name="arch" type="xml">
+                <form string="Warehouse Courier Pickup Request">
+                    <header>
+                        <button name="action_call_flash_courier"
+                                string="Call Flash Courier"
+                                type="object"
+                                class="oe_highlight"
+
+                                confirm="Are you sure you want to request a courier pickup from Flash Express?"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,requested,confirmed_by_flash,failed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            </div>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group name="group_top">
+                            <group name="group_left">
+                                <field name="request_date" readonly="0"/>
+                                <field name="request_date" readonly="1"/>
+                                <field name="user_id" readonly="1" options="{'no_create': True, 'no_open': True}"/>
+                            </group>
+                            <group name="group_right">
+                                </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Pickup Details &amp; API Input" name="pickup_details">
+                                <group>
+                                    <group string="Parcel Estimation">
+                                        <field name="flash_notify_estimate_parcel_number"/>
+                                        <field name="flash_notify_estimate_manual_override"/>
+                                        
+                                    </group>
+                                    <group string="Courier Remarks">
+                                        <field name="flash_pickup_remark"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Associated Tasks" name="tasks">
+                                <field name="task_ids" nolabel="1"
+                                       context="{'default_pickup_request_id': active_id}">
+                                    <tree string="Tasks">
+                                        <field name="name"/> <field name="status"/> </tree>
+                                    </field>
+                                <separator string="Note on Parcel Estimation"/>
+                                <p class="oe_grey">
+                                    The "Est. Parcel Count for Pickup" is automatically computed based on the number of associated tasks
+                                    in 'Booking' status (or defaults to 1 if no such tasks exist). You can manually override this
+                                    value while the request is in the 'Draft' state.
+                                </p>
+                            </page>
+                            <page string="Flash API Response" name="api_response">
+                                <group>
+                                     <group string="Flash Ticket Information">
+                                        <field name="flash_ticket_pickup_id" readonly="1"/>
+                                        <field name="flash_timeout_at_text" readonly="1"/>
+                                    </group>
+                                    <group string="Assigned Staff Information">
+                                        <field name="flash_staff_info_name" readonly="1"/>
+                                        <field name="flash_staff_info_phone" readonly="1"/>
+                                    </group>
+                                </group>
+                                <group string="Flash Messages">
+                                     <field name="flash_ticket_message" readonly="1"/>
+                                     <field name="flash_pickup_notice" readonly="1"/>
+                                </group>
+                                <group string="API Call Log">
+                                    <field name="api_call_message" readonly="1" nolabel="1" placeholder="Last API call details..."/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+
+                </form>
+            </field>
+        </record>
+
+        <record id="view_warehouse_pickup_request_tree" model="ir.ui.view">
+            <field name="name">warehouse.pickup_request.tree</field>
+            <field name="model">warehouse.pickup_request</field>
+            <field name="arch" type="xml">
+                <tree string="Warehouse Courier Pickup Requests" decoration-info="state=='draft'" decoration-muted="state=='failed'" decoration-success="state=='confirmed_by_flash'">
+                    <field name="name"/>
+                    <field name="request_date"/>
+                    <field name="user_id"/>
+                    <field name="flash_notify_estimate_parcel_number" string="Est. Parcels"/>
+                    <field name="flash_ticket_pickup_id" optional="show"/>
+                    <field name="flash_staff_info_name" optional="show"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_warehouse_pickup_request_search" model="ir.ui.view">
+            <field name="name">warehouse.pickup_request.search</field>
+            <field name="model">warehouse.pickup_request</field>
+            <field name="arch" type="xml">
+                <search string="Search Warehouse Courier Pickup Requests">
+                    <field name="name" string="Request Name/ID"/>
+                    <field name="user_id" string="Requested By"/>
+                    <field name="request_date"/>
+                    <field name="flash_ticket_pickup_id" string="Flash Ticket ID"/>
+                    <field name="state"/>
+                    <separator/>
+                    <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="Requested" name="requested" domain="[('state', '=', 'requested')]"/>
+                    <filter string="Confirmed by Flash" name="confirmed_by_flash" domain="[('state', '=', 'confirmed_by_flash')]"/>
+                    <filter string="Failed" name="failed" domain="[('state', '=', 'failed')]"/>
+                    <separator/>
+                    <filter string="My Requests" name="my_requests" domain="[('user_id', '=', uid)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                        <filter string="Requested By" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                        <filter string="Request Date" name="group_by_request_date" context="{'group_by': 'request_date:day'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_warehouse_pickup_request" model="ir.actions.act_window">
+            <field name="name">Warehouse Courier Pickup Requests</field>
+            <field name="res_model">warehouse.pickup_request</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_warehouse_pickup_request_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new Warehouse Courier Pickup Request.
+                </p><p>
+                    This allows you to manage and track requests for courier pickups from the warehouse
+                    via the Flash Express API.
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_warehouse_pickup_request_actions"
+                  name="Flash Courier Pickups"
+                  action="action_warehouse_pickup_request"
+                  parent="menu_warehouse_root" />
+
+    </data>
+</odoo>

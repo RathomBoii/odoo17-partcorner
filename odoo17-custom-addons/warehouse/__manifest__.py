@@ -16,7 +16,14 @@
         'views/actions.xml',
         'views/menus.xml',
         'views/task_views.xml',
+        'views/pickup_request_views.xml',
     ],
+    # 'assets': {
+    #     'web.assets_backend': [
+    #         'warehouse/static/src/js/warehouse_task_control_panel.js'
+    #         'warehouse/static/src/xml/warehouse_task_control_panel.xml'
+    #     ]
+    # },
     'installable': True,
     'application': True,
 }

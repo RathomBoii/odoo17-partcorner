@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 import logging
 import hashlib
@@ -14,7 +14,16 @@ _logger = logging.getLogger(__name__)
 class WarehouseTask(models.Model):
     _name = 'warehouse.task'
     _description = 'Warehouse Task'
-    # _inherit = ['mail.thread', 'mail.activity.mixin']
+    
+    pickup_request_id = fields.Many2one(
+        comodel_name='warehouse.pickup_request', # Links to your main model
+        string='Warehouse Pickup Request',
+        ondelete='cascade',  # Or 'set null' depending on how you want to handle deletion.
+                         # 'cascade' will delete linked tasks if the pickup request is deleted.
+                         # 'set null' will set this field to null if the pickup request is deleted.
+        index=True,      # Good for performance if you search/filter by this field
+        copy=False       # Usually, you don't want to copy this link when duplicating a task
+    )
 
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True)
     process_wip_id = fields.Many2one('process.wip', string='Process WIP', required=True)
@@ -88,6 +97,15 @@ class WarehouseTask(models.Model):
     message_print_label = fields.Char(string="Message For Print Flash Express Label" , store=True, readonly=True)
     printed_label_pdf = fields.Binary(string="Label File (PDF):", readonly=True, attachment=False)
     printed_label_filename = fields.Char(string="Label Filename", readonly=True, default="flash_label.pdf")
+
+    flash_parcel_state_code = fields.Integer(string="Flash State Code", readonly=True, copy=False)
+    flash_parcel_state_text = fields.Char(string="Flash Parcel State", readonly=True, copy=False)
+    flash_parcel_state_change_at = fields.Datetime(string="Flash State Last Updated", readonly=True, copy=False)
+    flash_parcel_routes_details = fields.Text(string="Flash Route Details (JSON)", readonly=True, copy=False)
+
+    flash_latest_route_message = fields.Char(string="Latest Route Message", readonly=True, copy=False)
+    flash_latest_route_action = fields.Char(string="Latest Route Action", readonly=True, copy=False)
+    flash_latest_route_at = fields.Datetime(string="Latest Route Timestamp", readonly=True, copy=False)
     
     @api.depends('sale_order_id', 'shipping_partner_id') # Add relevant dependencies
     def _compute_flash_api_params(self):
@@ -98,8 +116,8 @@ class WarehouseTask(models.Model):
                 record.dst_name = record.shipping_partner_id.name or ''
                 # Populate other dst_ fields similarly
                 record.dst_phone = record.shipping_partner_id.phone or record.shipping_partner_id.mobile or ''
-                record.dst_province_name = record.shipping_partner_id.state_id.name or ''
-                record.dst_city_name = record.shipping_partner_id.city or '' # This might need mapping to Flash's district/amphoe
+                record.dst_province_name = record.shipping_partner_id.city or ''
+                record.dst_city_name = record.shipping_partner_id.state_id.name or '' # This might need mapping to Flash's district/amphoe
                 record.dst_postal_code = record.shipping_partner_id.zip or ''
                 record.dst_detail_address = record.shipping_partner_id.street or ''
                 if record.shipping_partner_id.street2:
@@ -233,6 +251,10 @@ class WarehouseTask(models.Model):
             _logger.warning("Delivery order ID is already set. Skipping API call.")
             return {"code": 0, "message": "Delivery order ID already exists."}
         
+        if self.status != 'packing':
+            _logger.error("Cannot create Flash Express order unless task status is 'packing'.")
+            raise UserError("Flash Express order can only be created when task status is 'packing'.")
+        
         api_env = self._get_system_parameter("api_env") or 'TRAIN' # Default to Training if not set
         base_url = ""
         if api_env.upper() == 'PROD':
@@ -267,6 +289,7 @@ class WarehouseTask(models.Model):
                 except json.JSONDecodeError:
                     _logger.error(f"AIOHTTP: Failed to decode JSON from response: {response_text}")
                     raise UserError(f"Received an invalid (non-JSON) response from Flash Express: {response_text[:200]}")
+                self.status = 'booking' # Update status to 'booking' after successful API call
                 return response_data
         # ... (Keep the robust error handling from the previous example: ClientResponseError, TimeoutError, ClientError, general Exception) ...
         except aiohttp.ClientResponseError as e:
@@ -561,4 +584,230 @@ class WarehouseTask(models.Model):
         return False # Fallback if no download action is returned
     # -- END: Print Flash Express Order API Call ---
 
+    # --- START: Check Flash Express Parcel Status API Call ---
+    async def _call_flash_express_check_status_api(self, session, pno, payload_for_post):
+        """ Makes the asynchronous POST request to Flash Express Check Status API. """
+        self.ensure_one() # Should operate on a single task with a PNO
 
+        api_env = self._get_system_parameter("api_env") or 'TRAIN'
+        base_url = self._get_system_parameter(f"{api_env.lower()}_base_url") # e.g., train_base_url or prod_base_url
+
+        if not base_url:
+            _logger.error("Flash Express API base URL not configured for env '%s'.", api_env)
+            raise UserError(_("Flash Express API base URL for environment '%s' is not configured.", api_env))
+
+        api_endpoint = f"/open/v1/orders/{pno}/routes"
+        api_url = f"{base_url.rstrip('/')}{api_endpoint}"
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded', # As per spec for request body
+            'Accept': 'application/json'                        # As per spec for response
+        }
+
+        _logger.info(f"AIOHTTP Check Status: Sending POST request to {api_url}")
+        _logger.debug(f"AIOHTTP Check Status: Payload for POST (form-urlencoded): {payload_for_post}")
+
+        try:
+            async with session.post(api_url, data=payload_for_post, headers=headers, timeout=30) as response:
+                response_text = await response.text()
+                _logger.info(f"AIOHTTP Check Status: Raw response status: {response.status}")
+                _logger.debug(f"AIOHTTP Check Status: Raw response body: {response_text}")
+                response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+
+                try:
+                    response_data = json.loads(response_text)
+                    _logger.info("AIOHTTP Check Status: Successfully parsed JSON response.")
+                    return response_data
+                except json.JSONDecodeError:
+                    _logger.error(f"AIOHTTP Check Status: Failed to decode JSON from response: {response_text}")
+                    raise UserError(_("Received an invalid (non-JSON) response from Flash Express while checking status: %s", response_text[:200]))
+        
+        except aiohttp.ClientResponseError as e:
+            error_body_text = "N/A"
+            if e.response: # Check if response object exists
+                try:
+                    error_body_text = await e.response.text()
+                except Exception: # Catch any error during text() read
+                    pass
+            _logger.error(
+                f"AIOHTTP Check Status: HTTP error {e.status} during API call: {e.message}. "
+                f"Response: {error_body_text}"
+            )
+            # Try to parse error_body_text for a more specific message from Flash
+            error_message_detail = e.message
+            if error_body_text != "N/A":
+                try:
+                    error_json = json.loads(error_body_text)
+                    error_message_detail = error_json.get('message', e.message)
+                except json.JSONDecodeError: pass # Keep original e.message
+            raise UserError(_("Flash Express API Error (%s) checking status: %s", e.status, error_message_detail))
+        except asyncio.TimeoutError:
+            _logger.error("AIOHTTP Check Status: Request to Flash Express API timed out.")
+            raise UserError(_("The request to Flash Express (check status) timed out. Please try again later."))
+        except aiohttp.ClientError as e:
+            _logger.error(f"AIOHTTP Check Status: ClientError during API call: {e}")
+            raise UserError(_("Could not connect to Flash Express (check status): %s", e))
+        except Exception as e:
+            _logger.error(f"AIOHTTP Check Status: An unexpected error occurred: {e}", exc_info=True)
+            raise UserError(_("An unexpected error occurred while checking Flash Express status: %s", e))
+
+
+    async def _prepare_and_call_check_status_api_async(self, session):
+        """ Prepares the payload, generates signature, and calls the Check Status API. """
+        self.ensure_one()
+        _logger.info(f"Starting Flash Express status check for task: {self.name or self.id}, PNO: {self.delivery_order_id}")
+
+        if not self.delivery_order_id:
+            raise UserError(_("Flash Express PNO (Tracking ID) is not set for this task. Cannot check status."))
+
+        pno = self.delivery_order_id # PNO is a path variable, not in signed payload
+
+        api_env_setting = self._get_system_parameter("api_env") or 'TRAIN'
+        credential_env_prefix = 'prod' if api_env_setting.upper() == 'PROD' else 'dev'
+        _logger.info(f"Check Status: API Env: {api_env_setting}, Credential Prefix: {credential_env_prefix}")
+
+        mch_id = self._get_system_parameter("mch_id", credential_env_prefix)
+        secret_key = self._get_system_parameter("secret_key", credential_env_prefix)
+
+        if not mch_id: raise UserError(_("Flash Express MCH ID for env '%s' not configured.", credential_env_prefix))
+        if not secret_key: raise UserError(_("Flash Express Secret Key for env '%s' not configured.", credential_env_prefix))
+
+        payload_body_for_signing = {
+            "mchId": str(mch_id),
+            "nonceStr": self._create_random_string(32),
+        }
+        _logger.debug(f"AIOHTTP Check Status: Payload body for signing: {payload_body_for_signing}")
+
+        # Note: pno is NOT included in the signature calculation for this endpoint
+        data_to_sign_filtered = self._filter_null_key_value(payload_body_for_signing.copy())
+        key_value_request_string = self._construct_key_value_string(data_to_sign_filtered)
+        presign_string = self._construct_presign_string(key_value_request_string, secret_key)
+        encoded_signature = self._sha256_encode(presign_string)
+        final_api_signature = self._transform_string_to_upper_case(encoded_signature)
+        
+        final_payload_for_post = payload_body_for_signing.copy() # This is what goes into the request body
+        final_payload_for_post["sign"] = final_api_signature
+        _logger.info(f"AIOHTTP Check Status: final_payload_for_post (body): {final_payload_for_post}")
+
+        return await self._call_flash_express_check_status_api(session, pno, final_payload_for_post)
+
+
+    def action_check_flash_status(self):
+        """ Action method triggered by a button to check Flash Express parcel status. """
+        self.ensure_one()
+        _logger.info(f"User triggered Flash Express status check for task: {self.name or self.id} (PNO: {self.delivery_order_id})")
+
+        if not self.delivery_order_id:
+            # If you want a UI notification for this specific error:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error'),
+                    'message': _("Flash Express PNO (Tracking ID) is not set for this task. Cannot check status."),
+                    'type': 'danger',
+                    'sticky': False,
+                }
+            }
+            # Or simply raise UserError, which Odoo also displays
+            # raise UserError(_("Flash Express PNO (Tracking ID) is not set for this task."))
+
+
+        async def main_async_wrapper():
+            async with aiohttp.ClientSession() as session:
+                return await self._prepare_and_call_check_status_api_async(session)
+        
+        try:
+            result = asyncio.run(main_async_wrapper())
+            _logger.info(f"Flash Express Check Status API call completed. Result: {result}")
+
+            if result and isinstance(result, dict):
+                if result.get("code") == 1 and result.get("data"):
+                    api_data = result.get("data")
+                    pno_returned = api_data.get("pno")
+                    state_code = api_data.get("state")
+                    state_text = api_data.get("stateText")
+                    state_change_at_ts = api_data.get("stateChangeAt")
+                    routes = api_data.get("routes") or []
+
+                    _logger.info(f"result: {result}")
+
+                    vals_to_write = {
+                        'flash_parcel_state_code': state_code,
+                        'flash_parcel_state_text': state_text,
+                        'flash_parcel_routes_details': json.dumps(routes, indent=2) if routes else "[]", # Store empty JSON array if no routes
+                    }
+
+                    if state_change_at_ts:
+                        self.flash_parcel_state_change_at = state_change_at_ts
+                    
+                    # Log success to server logs
+                    log_message = f"Flash Express Status for PNO {pno_returned}: State: {state_text} (Code: {state_code})."
+                    _logger.info(log_message)
+
+                    # --- Process most recent route ---
+                    latest_route_message = False # Default to False or empty string
+                    latest_route_action = False
+                    latest_route_at_dt = False
+
+                    if routes:
+                        # Assuming the API returns routes sorted with the most recent first
+                        # If not, you would need to sort them by 'routedAt' descending first
+                        most_recent_route = routes[0] 
+                        
+                        latest_route_message = most_recent_route.get('message')
+                        latest_route_action = most_recent_route.get('routeAction')
+                        latest_route_at_ts = most_recent_route.get('routedAt')
+                        if latest_route_at_ts:
+                            latest_route_at_dt = latest_route_at_ts
+                        
+                        vals_to_write.update({
+                            'flash_latest_route_message': latest_route_message,
+                            'flash_latest_route_action': latest_route_action,
+                            'flash_latest_route_at': latest_route_at_dt,
+                        })
+                    else:
+                        # If no routes, explicitly clear or set default values for latest route fields
+                         vals_to_write.update({
+                            'flash_latest_route_message': False,
+                            'flash_latest_route_action': False,
+                            'flash_latest_route_at': False,
+                        })
+                   
+                    # Write the updated values to the task
+                    self.write(vals_to_write)
+
+
+                    # Return a success notification to the user's UI
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': _('Flash Status Updated'),
+                            'message': _("Status for PNO %s: %s", pno_returned, state_text),
+                            'type': 'success', 
+                            'sticky': False,
+                        }
+                    }
+
+                else: # API call successful but business error (code != 1)
+                    error_message_api = result.get("message", _("API call failed or returned unexpected data."))
+                    _logger.error(f"Flash Express Check Status API Error: {error_message_api} - Full Response: {result}")
+                    raise UserError(_("Flash Express API Error: %s", error_message_api))
+            else: # Unexpected result format
+                _logger.error(f"Flash Express Check Status API call returned an unexpected result format: {result}")
+                raise UserError(_("Flash Express API call for status returned an unexpected result format."))
+
+        except UserError as ue: # Catch UserErrors raised from async methods or here
+            _logger.error(f"UserError during check status for PNO {self.delivery_order_id}: {ue}")
+            # UserErrors are already displayed by Odoo, but you can re-raise or return a notification
+            # For consistency, let's re-raise to let Odoo handle the display
+            raise
+        except Exception as e:
+            _logger.error(f"Unexpected error during check status for PNO {self.delivery_order_id}: {e}", exc_info=True)
+            # For generic exceptions, explicitly raise a UserError for the UI
+            raise UserError(_("An unexpected system error occurred while checking status. Please check server logs. (Error: %s)", type(e).__name__))
+        
+        # Fallback, should ideally always return a notification action or raise UserError
+        return True
+    # --- END: Check Flash Express Parcel Status API Call ---
