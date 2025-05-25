@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 class WarehouseTask(models.Model):
     _name = 'warehouse.task'
     _description = 'Warehouse Task'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    # _inherit = ['mail.thread', 'mail.activity.mixin']
 
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True)
     process_wip_id = fields.Many2one('process.wip', string='Process WIP', required=True)
@@ -72,15 +72,7 @@ class WarehouseTask(models.Model):
         ( '0', 'ไม่ใช่' ),
         ( '1' , 'ใช่' )
     ], default='0', string='เป็นพัสดุ COD หรือไม่:')
-
-
-    # out_trade_no = fields.Char( compute="_compute_flash_express_api_parameters", string="หมายเลข Order", store=True, )
-    # dst_name = fields.Char( string="ชื่อผู้รับ", store=True, )
-    # dst_phone = fields.Char( string="เบอร์โทรผู้รับ", store=True)
-    # dst_province_name = fields.Char( string="จังหวัดของผู้รับ", store=True, )
-    # dst_postal_code = fields.Char( string="รหัสไปรษณีย์ของผู้รับ", store=True, )
-    # dst_city_name = fields.Char(string="อำเภอของผู้รับ", store=True)
-    # dst_detail_address = fields.Char(string="ที่อยู่โดยละเอียดของผู้รับ", store=True)
+    
     out_trade_no = fields.Char(compute="_compute_flash_api_params", string="หมายเลข Order", store=True, readonly=False) # readonly=False if you want it editable or only set by compute
     dst_name = fields.Char(string="ชื่อผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
     dst_phone = fields.Char(string="เบอร์โทรผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
@@ -88,6 +80,9 @@ class WarehouseTask(models.Model):
     dst_postal_code = fields.Char(string="รหัสไปรษณีย์ของผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
     dst_city_name = fields.Char(string="อำเภอของผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
     dst_detail_address = fields.Char(string="ที่อยู่โดยละเอียดของผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
+
+    delivery_order_id = fields.Char(string="หมายเลขการจัดส่ง", compute="_compute_flash_api_params", store=True, readonly=True)
+    message_post = fields.Char(string="Message Post" , store=True, readonly=True)
     
     @api.depends('sale_order_id', 'shipping_partner_id') # Add relevant dependencies
     def _compute_flash_api_params(self):
@@ -227,6 +222,10 @@ class WarehouseTask(models.Model):
         # 'flash_express.api_env': can be 'TRAIN' or 'PROD' (or similar)
         # 'flash_express.train_base_url': https://open-api-tra.flashexpress.com
         # 'flash_express.prod_base_url': https://open-api.flashexpress.com
+
+        if self.delivery_order_id:
+            _logger.warning("Delivery order ID is already set. Skipping API call.")
+            return {"code": 0, "message": "Delivery order ID already exists."}
         
         api_env = self._get_system_parameter("api_env") or 'TRAIN' # Default to Training if not set
         base_url = ""
@@ -237,7 +236,8 @@ class WarehouseTask(models.Model):
 
         if not base_url:
             _logger.error("Flash Express API base URL is not configured in system parameters.")
-            raise UserError("Flash Express API base URL is not configured.")
+            raise UserError("Fl" \
+            "nfigured.")
 
         api_endpoint = "/open/v3/orders" # For creating orders
         api_url = f"{base_url.rstrip('/')}{api_endpoint}"
@@ -377,24 +377,25 @@ class WarehouseTask(models.Model):
                     # ... (process successful response as before) ...
                     api_data = result.get("data")
                     pno = api_data.get("pno")
-                    self.message_post(body=f"Flash Express order created successfully! PNO: {pno}")
+                    self.message_post = f"Flash Express order created successfully! PNO: {pno}"
+                    self.delivery_order_id = pno # Assuming this is the delivery order ID
                 else:
                     error_message = result.get("message", "API call failed or returned unexpected data.")
                     _logger.error(f"Flash Express API Error: {error_message} - Full Response: {result}")
-                    self.message_post(body=f"Flash Express API Error: {error_message}")
+                    self.message_post = f"Flash Express API Error: {error_message}"
             else:
                 _logger.error(f"Flash Express API call returned an unexpected result: {result}")
-                self.message_post(body=f"Flash Express API call returned an unexpected result.")
+                self.message_post = "Flash Express API call returned an unexpected result."
 
         except UserError as ue:
             _logger.error(f"UserError: {ue}")
-            self.message_post(body=f"Error: {str(ue)}")
+            self.message_post =f"Error: {str(ue)}"
         except ValidationError as ve:
             _logger.error(f"ValidationError: {ve}")
-            self.message_post(body=f"Validation Error: {str(ve)}")
+            self.message_post =f"Validation Error: {str(ve)}"
         except Exception as e:
             _logger.error(f"Unexpected error: {e}", exc_info=True)
-            self.message_post(body=f"An unexpected system error occurred: {str(e)}")
+            self.message_post =f"An unexpected system error occurred: {str(e)}"
         return True
 
 
