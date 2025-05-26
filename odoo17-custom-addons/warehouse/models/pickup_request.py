@@ -46,12 +46,9 @@ class WarehousePickupRequest(models.Model):
         string='Associated Tasks'
     )
 
-
     state = fields.Selection([
         ('draft', 'Draft'),
         ('requested', 'Courier Requested (API Call Made)'), 
-        # ('confirmed_by_flash', 'Pickup Confirmed by Flash'),
-        # ('failed', 'Request Failed'),
     ], string='Status', default='draft', readonly=True, copy=False, tracking=True)
 
     # Input parameters for the "Notify Courier" API
@@ -73,17 +70,17 @@ class WarehousePickupRequest(models.Model):
     flash_pickup_remark = fields.Char(
         string="Remark for Courier",
         tracking=True,
-        states={'draft': [('readonly', False)]}
+        states={'draft': [('readonly', False)]},
+        default="Please handle with care."
     )
 
-    # Response fields from the "Notify Courier" API
     flash_ticket_pickup_id = fields.Char(string="Flash Pickup Ticket ID", readonly=True, copy=False, tracking=True)
     flash_staff_info_name = fields.Char(string="Flash Staff Name", readonly=True, copy=False)
     flash_staff_info_phone = fields.Char(string="Flash Staff Phone", readonly=True, copy=False)
     flash_timeout_at_text = fields.Char(string="Flash Est. Pickup Time", readonly=True, copy=False)
     flash_ticket_message = fields.Text(string="Flash System Message", readonly=True, copy=False)
     flash_pickup_notice = fields.Text(string="Flash Popup Info", readonly=True, copy=False)
-    
+
     api_call_message = fields.Text(string="Last API Call Message", readonly=True, copy=False)
 
     # --- Compute and Inverse for Estimate ---

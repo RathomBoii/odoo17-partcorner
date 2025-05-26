@@ -51,7 +51,6 @@
                                     <field name="weight"/>  
                                     <field name="insured"/>  
                                     <field name="cod_enabled"/> 
-                                    <field name="message_create_post"/>  
                                     <field name="delivery_order_id"  widget="CopyClipboardChar"/> 
                                 </group>
                                 <group>
@@ -76,9 +75,6 @@
                                         />
                                     </div>
                                 </group>
-                            </page>
-                            <page string="Call Flash Express Courier">
-                                
                             </page>
                             <page string="Flash Express Status">
                                 <group>

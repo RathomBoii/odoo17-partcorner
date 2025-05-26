@@ -92,7 +92,6 @@ class WarehouseTask(models.Model):
     dst_detail_address = fields.Char(string="ที่อยู่โดยละเอียดของผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
 
     delivery_order_id = fields.Char(string="หมายเลขการจัดส่ง", compute="_compute_flash_api_params", store=True, readonly=True)
-    message_create_post = fields.Char(string="Message For Created Flash Express Order" , store=True, readonly=True)
     
     message_print_label = fields.Char(string="Message For Print Flash Express Label" , store=True, readonly=True)
     printed_label_pdf = fields.Binary(string="Label File (PDF):", readonly=True, attachment=False)
@@ -406,26 +405,34 @@ class WarehouseTask(models.Model):
                     # ... (process successful response as before) ...
                     api_data = result.get("data")
                     pno = api_data.get("pno")
-                    self.message_create_post = f"Flash Express order created successfully! PNO: {pno}"
                     self.delivery_order_id = pno # Assuming this is the delivery order ID
+                    return {
+                        'type': 'ir.actions.client',
+                        'tag': 'display_notification',
+                        'params': {
+                            'title': _('Success'),
+                            'message': f"Flash Express order created successfully! PNO: {pno}",
+                            'type': 'success',  # 'success' for green notification
+                            'sticky': True,     # Keep the notification until the user closes it
+                        }
+                    }
                 else:
                     error_message = result.get("message", "API call failed or returned unexpected data.")
                     _logger.error(f"Flash Express API Error: {error_message} - Full Response: {result}")
-                    self.message_create_post = f"Flash Express API Error: {error_message}"
+                    raise UserError(f"Flash Express API Error: {error_message}")
             else:
                 _logger.error(f"Flash Express API call returned an unexpected result: {result}")
-                self.message_create_post = "Flash Express API call returned an unexpected result."
+                raise UserError("Flash Express API call returned an unexpected result.")
 
         except UserError as ue:
             _logger.error(f"UserError: {ue}")
-            self.message_create_post =f"Error: {str(ue)}"
+            raise UserError(f"Error: {str(ue)}")
         except ValidationError as ve:
             _logger.error(f"ValidationError: {ve}")
-            self.message_create_post =f"Validation Error: {str(ve)}"
+            raise UserError(f"Validation Error: {str(ve)}")
         except Exception as e:
             _logger.error(f"Unexpected error: {e}", exc_info=True)
-            self.message_create_post =f"An unexpected system error occurred: {str(e)}"
-        return True
+            raise UserError(f"An unexpected system error occurred: {str(e)}")
     # --- END: create Flash Express Order API Call ---
 
     # --- START: Print Flash Express Order API Call ---

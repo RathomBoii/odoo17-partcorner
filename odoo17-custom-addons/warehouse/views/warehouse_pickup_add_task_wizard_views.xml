@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_warehouse_pickup_add_task_wizard_form" model="ir.ui.view">
+            <field name="name">warehouse.pickup_add_task_wizard.form</field>
+            <field name="model">warehouse.pickup_add_task_wizard</field>
+            <field name="arch" type="xml">
+                <form string="Add Existing Tasks to Pickup Request">
+                    <group>
+                        <field name="pickup_request_id" options="{'no_open': True}"/>
+                        <field name="task_ids_to_add" widget="many2many_tags" options="{'no_create': True, 'no_create_edit': True}"/>
+                    </group>
+                    <footer>
+                        <button name="action_add_selected_tasks" string="Add Selected Tasks" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_open_add_task_wizard" model="ir.actions.act_window">
+            <field name="name">Add Existing Tasks</field>
+            <field name="res_model">warehouse.pickup_add_task_wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{
+                'default_pickup_request_id': active_id,
+            }</field>
+        </record>
+    </data>
+</odoo>

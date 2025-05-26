@@ -5,3 +5,6 @@ warehouse_task_user,warehouse.task.user,model_warehouse_task,,1,0,0,0
 warehouse_pickup_request,warehouse.pickup_request,model_warehouse_pickup_request,,1,1,1,1
 warehouse_pickup_request_manager,warehouse.pickup_request.manager,model_warehouse_pickup_request,,1,1,1,1
 warehouse_pickup_request_user,warehouse.pickup_request.user,model_warehouse_pickup_request,,1,0,0,0
+warehouse_pickup_add_task_wizard,warehouse.warehouse_pickup_add_task_wizard,model_warehouse_pickup_add_task_wizard,,1,1,1,1
+warehouse_pickup_add_task_wizard_manager,warehouse.warehouse_pickup_add_task_wizard.manager,model_warehouse_pickup_add_task_wizard,,1,1,1,1
+warehouse_pickup_add_task_wizard_user,warehouse.warehouse_pickup_add_task_wizard.user,model_warehouse_pickup_add_task_wizard,,1,0,0,0
