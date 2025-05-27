@@ -15,15 +15,15 @@ class WarehouseTask(models.Model):
     _name = 'warehouse.task'
     _description = 'Warehouse Task'
     
-    pickup_request_id = fields.Many2one(
-        comodel_name='warehouse.pickup_request', # Links to your main model
-        string='Warehouse Pickup Request',
-        ondelete='cascade',  # Or 'set null' depending on how you want to handle deletion.
-                         # 'cascade' will delete linked tasks if the pickup request is deleted.
-                         # 'set null' will set this field to null if the pickup request is deleted.
-        index=True,      # Good for performance if you search/filter by this field
-        copy=False       # Usually, you don't want to copy this link when duplicating a task
-    )
+    # pickup_request_id = fields.Many2one(
+    #     comodel_name='warehouse.pickup_request', # Links to your main model
+    #     string='Warehouse Pickup Request',
+    #     ondelete='cascade',  # Or 'set null' depending on how you want to handle deletion.
+    #                      # 'cascade' will delete linked tasks if the pickup request is deleted.
+    #                      # 'set null' will set this field to null if the pickup request is deleted.
+    #     index=True,      # Good for performance if you search/filter by this field
+    #     copy=False       # Usually, you don't want to copy this link when duplicating a task
+    # )
 
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True)
     process_wip_id = fields.Many2one('process.wip', string='Process WIP', required=True)
