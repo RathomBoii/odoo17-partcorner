@@ -9,7 +9,6 @@
         'base', 
         'portal', 
         'process_tracker', 
-        'mail'
     ],
     'data': [
         'security/ir.model.access.csv',
