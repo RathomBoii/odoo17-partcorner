@@ -51,7 +51,7 @@
                                     <field name="weight"/>  
                                     <field name="insured"/>  
                                     <field name="cod_enabled"/> 
-                                    <field name="delivery_order_id"  widget="CopyClipboardChar"/> 
+                                    <field name="delivery_order_id"/> 
                                 </group>
                                 <group>
                                     <div style=" width: 500px; justify-content: start; display: flex; align-items: center; margin-top: 20px;">
