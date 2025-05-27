@@ -301,7 +301,7 @@ class WarehousePickupRequest(models.Model):
             if result and isinstance(result, dict) and result.get("code") == 1 and result.get("data"):
                 api_data = result.get("data")
                 self.write({
-                    'state': 'confirmed_by_flash', 
+                    'state': 'requesteds', 
                     'flash_ticket_pickup_id': api_data.get("ticketPickupId"),
                     'flash_staff_info_name': api_data.get("staffInfoName"),
                     'flash_staff_info_phone': api_data.get("staffInfoPhone"),
@@ -324,18 +324,18 @@ class WarehousePickupRequest(models.Model):
                 }
             else:
                 error_msg = result.get("message", _("API call failed or returned no data.")) if result else _("No response from API.")
-                self.write({'state': 'failed', 'api_call_message': error_msg})
+                # self.write({'state': 'failed', 'api_call_message': error_msg})
                 self.message_post(body=_("Failed to call courier: %s", error_msg))
                 raise UserError(_("Flash API Error (Notify Courier): %s", error_msg))
         except UserError as ue: # Catch UserErrors from async methods or this one
             # State might have already been set to 'failed' if error came from API helper
-            if self.state != 'failed':
-                self.write({'state': 'failed', 'api_call_message': str(ue)})
+            # if self.state != 'failed':
+            #     self.write({'state': 'failed', 'api_call_message': str(ue)})
             _logger.error(f"UserError during 'Call Flash Courier' for {self.name}: {ue}")
             self.message_post(body=_("Error calling courier: %s", str(ue)))
             raise
         except Exception as e:
-            self.write({'state': 'failed', 'api_call_message': _("Unexpected system error: %s", type(e).__name__)})
+            # self.write({'state': 'failed', 'api_call_message': _("Unexpected system error: %s", type(e).__name__)})
             _logger.error(f"Unexpected error 'Call Flash Courier' for {self.name}: {e}", exc_info=True)
             self.message_post(body=_("System Error calling courier: %s. Check logs.", type(e).__name__))
             raise UserError(_("Unexpected system error. Check logs. (%s)", type(e).__name__))

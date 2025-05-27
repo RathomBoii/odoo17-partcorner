@@ -14,16 +14,6 @@
                         <field name="state" widget="statusbar" statusbar_visible="draft,requested,confirmed_by_flash,failed"/>
                     </header>
                     <sheet>
-                        
-                        <div class="oe_button_box" name="button_box">
-                            <button name="%(action_open_add_task_wizard)d" type="action"
-                                    string="Add Existing Tasks"
-                                    class="oe_stat_button"
-                                    icon="fa-plus-square"
-                                    help="Select existing tasks to associate with this pickup request"
-                            />
-                        </div>
-
                         <div class="oe_title">
                             <h1>
                                 <field name="name" readonly="1"/>
@@ -50,6 +40,14 @@
                                 </group>
                             </page>
                             <page string="Associated Tasks" name="tasks">
+                                <div class="oe_button_box" name="button_box">
+                                    <button name="%(action_open_add_task_wizard)d" type="action"
+                                        string="Add Existing Tasks"
+                                        class="oe_stat_button"
+                                        icon="fa-plus-square"
+                                        help="Select existing tasks to associate with this pickup request"
+                                    />
+                                </div>
                                 <field name="task_ids" nolabel="1"
                                        context="{'default_pickup_request_id': active_id, 'active_test': False}">
                                     <tree string="Tasks" create="false" delete="true">
