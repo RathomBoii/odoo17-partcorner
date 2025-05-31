@@ -151,10 +151,9 @@
                     <widget name="signature" string="Sign"
                             invisible="not id or picking_type_code != 'outgoing' or state == 'done'"
                             full_name="partner_id" groups="stock.group_stock_sign_delivery"/>
-                    <!-- <button name="do_print_picking" string="Print" groups="stock.group_stock_user" type="object" invisible="state != 'assigned'" data-hotkey="o"/> -->
-                    <button name="do_print_picking" string="Print Delivery Note" groups="stock.group_stock_user" type="object"/>
+                    <button name="do_print_picking" string="Print" groups="stock.group_stock_user" type="object" invisible="state != 'assigned'" data-hotkey="o"/>
                     <button string="Print Labels" type="object" name="action_open_label_type"/>
-                    <!-- <button name="%(action_report_delivery)d" string="Print" invisible="state != 'done'" type="action" groups="base.group_user" data-hotkey="o"/> -->
+                    <button name="%(action_report_delivery)d" string="Print" invisible="state != 'done'" type="action" groups="base.group_user" data-hotkey="o"/>
                     <button name="%(act_stock_return_picking)d" string="Return" invisible="state != 'done'" type="action" groups="base.group_user" data-hotkey="k"/>
                     <field name="state" widget="statusbar" invisible="picking_type_code != 'incoming'" statusbar_visible="draft,assigned,done"/>
                     <field name="state" widget="statusbar" invisible="picking_type_code == 'incoming'" statusbar_visible="draft,confirmed,assigned,done"/>

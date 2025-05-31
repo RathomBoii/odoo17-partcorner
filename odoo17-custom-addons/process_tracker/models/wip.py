@@ -42,10 +42,10 @@ class ProcessWIP(models.Model):
     @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
     def _compute_invoice_delivery_total(self):
         for record in self:
-            invoice = record.sale_order_id.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1]
-            delivery = record.sale_order_id.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1]
-            total = record.sale_order_id.amount_total
-            record.invoice_id = invoice.id if invoice else False
+            invoice = record.sale_order_id.invoice_ids.filtered(lambda x: x.move_type == 'out_invoice')[:1] # type: ignore
+            delivery = record.sale_order_id.picking_ids.filtered(lambda x: x.picking_type_code == 'outgoing')[:1] # type: ignore
+            total = record.sale_order_id.amount_total # type: ignore
+            record.invoice_id = invoice.id if invoice else False 
             record.delivery_id = delivery.id if delivery else False
             record.total = total if total else False
 
@@ -53,7 +53,7 @@ class ProcessWIP(models.Model):
         if 'status' in vals:
             for rec in self:
                 self.env['process.wip.log'].create({
-                    'wip_id': rec.id,
+                    'wip_id': rec.id, # type: ignore
                     'previous_status': rec.status,
                     'current_status': vals['status'],
                     'changed_by': self.env.user.id
@@ -77,7 +77,7 @@ class ProcessWIP(models.Model):
                 # check if prefered status in allowed status list for original status 
                 preferred_status = record.status
                 previous_status = record._origin.status
-                is_valid_transition = preferred_status in allowed_status_transition_dict.get(previous_status,[])
+                is_valid_transition = preferred_status in allowed_status_transition_dict.get(previous_status,[]) # type: ignore
                 if not is_valid_transition:
                     raise ValidationError(f"ไม่สามารถเปลี่ยน status ข้ามขั้นตอนได้ จาก {previous_status} ไปสู่ {record.status}.")
     

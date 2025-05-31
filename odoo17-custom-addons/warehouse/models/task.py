@@ -108,6 +108,7 @@ class WarehouseTask(models.Model):
     flash_latest_route_action = fields.Char(string="Latest Route Action", readonly=True, copy=False)
     flash_latest_route_at = fields.Datetime(string="Latest Route Timestamp", readonly=True, copy=False)
 
+    is_delivery_note_printed = fields.Boolean(readonly=True, default=False, copy=False)
     is_create_flash_order_success = fields.Boolean(readonly=True, default=False, copy=False)
     
     @api.depends('sale_order_id', 'shipping_partner_id') # Add relevant dependencies
@@ -168,9 +169,38 @@ class WarehouseTask(models.Model):
                 if preferred_status == "booking":
                     if not record.is_create_flash_order_success:
                         raise ValidationError("ไม่สามารถเปลี่ยน status เป็น 'booking' ได้ เนื่องจากยังไม่ได้สร้าง Flash Express order.")
+                if preferred_status == "kitting":
+                    if not record.is_create_flash_order_success:
+                        raise ValidationError("ไม่สามารถเปลี่ยน status เป็น 'kitting' ได้ เนื่องจากยังไม่ได้ปริ้น Delivery Note.")
 
                 if not is_valid_transition:
                     raise ValidationError(f"ไม่สามารถเปลี่ยน status ข้ามขั้นตอนได้ จาก {previous_status} ไปสู่ {record.status}.")
+
+    def print_delivery_note_inherit(self):
+        self.ensure_one() # Process one sale order at a time from the button
+
+        stock_picking_to_print = self.sale_order_id.picking_ids.filtered( # type: ignore
+            lambda p: p.state not in ['cancel'] and p.picking_type_id.code == "outgoing"
+        )
+
+        if not stock_picking_to_print:
+            raise UserError(_("There are no relevant delivery orders to print for this sales order."))
+        
+        stock_picking_to_print.do_print_picking()
+
+        self.write({'is_delivery_note_printed': True,})
+
+        stock_picking_to_print.do_print_picking()
+        # report_action = stock_picking_to_print.do_print_picking()
+
+        # if report_action:
+        #     return report_action
+        # else:
+        #     # Fallback or logging if no action is returned (e.g., if all pickings were already printed and method was customized)
+        #     # For standard 'do_print_picking', this else block might not be strictly necessary
+        #     # as it always aims to return the report action.
+        #     # You might want to refresh the view or provide feedback.
+        #     return True # Or raise a specific UserError if expected action not received.
 
 
     # Helper to get service instances

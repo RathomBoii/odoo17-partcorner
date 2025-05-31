@@ -9,14 +9,18 @@
                         <search string="Search Warehouse Tasks">
                             <filter string="Not Done" name="exclude_done" domain="[('status', '!=', 'done')]"/>
                         </search>
-                        <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,booking,pick_up_by_courier,done"/>
+                            <button 
+                                name="print_delivery_note_inherit"
+                                type="object"
+                                string="Print Delivery Notes"
+                                class="btn-primary"
+                            />
+                            <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,booking,pick_up_by_courier,done"/>
                     </header>
                     <sheet>
                         <group>
-                            <!-- <field name="status" widget="radio"/> -->
                             <field name="delivery_id"/>
                             <field name="status" style="border-bottom: 0.5px solid black;"/>
-                            <!-- <field name="previous_status" readonly="1"/> -->
                             <field name="sale_order_id" readonly="1"/>
                             <field name="customer" readonly="1"/>
                             <field name="process_wip_id" readonly="1"/>
@@ -56,8 +60,9 @@
                                 <group>
                                     <div style=" width: 500px; justify-content: start; display: flex; align-items: center; margin-top: 20px;">
                                         <button name="action_create_flash_express_order"  
-                                        type="object"
-                                        string="สร้าง Flash Order"
+                                            type="object"
+                                            string="Create Flash Order"
+                                            class="btn-primary"
                                         />
                                     </div>
                                 </group>
@@ -66,8 +71,9 @@
                                 <group>
                                     <div style=" width: 500px; justify-content: start; display: flex; align-items: center; margin-top: 20px;">
                                         <button name="action_print_label_flash_express_order"  
-                                        type="object"
-                                        string="Print Flash Order Label"
+                                            type="object"
+                                            string="Print Flash Order Label"
+                                            class="btn-primary"
                                         />
                                     </div>
                                 </group>
@@ -81,9 +87,11 @@
                                 </group>
                                 <group>
                                     <div style=" width: 500px; justify-content: start; display: flex; align-items: center; margin-top: 20px;">
-                                        <button name="action_check_flash_status"  
-                                        type="object"
-                                        string="Get Flash Express Status"
+                                        <button 
+                                            name="action_check_flash_status"  
+                                            type="object"
+                                            string="Get Flash Express Status"
+                                            class="btn-primary"
                                         />
                                     </div>
                                 </group>
