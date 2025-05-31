@@ -64,10 +64,6 @@
                             </page>
                             <page string="Print Flash Express Label">
                                 <group>
-                                    <field name="printed_label_pdf"/>  
-                                    <field name="printed_label_filename"/>  
-                                </group>
-                                <group>
                                     <div style=" width: 500px; justify-content: start; display: flex; align-items: center; margin-top: 20px;">
                                         <button name="action_print_label_flash_express_order"  
                                         type="object"
