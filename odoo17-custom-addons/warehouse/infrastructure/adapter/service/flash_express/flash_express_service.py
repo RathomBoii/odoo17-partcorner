@@ -76,12 +76,11 @@ class FlashExpressService:
             raise UserError(f"Unexpected error contacting Flash Express: {e}")
 
     def create_order(self, task_record):
-        # todo: return these 
-        # if task_record.delivery_order_id:
-        #     _logger.warning(f"Task {task_record.name}: Delivery order already exists ({task_record.delivery_order_id}). Skipping.")
-        #     return {"code": 0, "message": "Delivery order ID already exists."} # Existing behavior
-        # if task_record.status != 'packing':
-        #     raise UserError("Flash Express order can only be created when task status is 'packing'.")
+        if task_record.delivery_order_id:
+            _logger.warning(f"Task {task_record.name}: Delivery order already exists ({task_record.delivery_order_id}). Skipping.")
+            return {"code": 0, "message": "Delivery order ID already exists."} # Existing behavior
+        if task_record.status != 'packing':
+            raise UserError("Flash Express order can only be created when task status is 'packing'.")
 
         api_url, mch_id, secret_key = self.flash_helper.get_api_credentials_and_url({'key': "create_order"})
 
