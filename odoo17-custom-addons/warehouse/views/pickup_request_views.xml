@@ -1,84 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
-        <record id="view_warehouse_pickup_request_form" model="ir.ui.view">
+
+        <record id="seq_warehouse_pickup_request" model="ir.sequence">
+            <field name="name">Pickup Request Sequence</field>
+            <field name="code">warehouse.pickup_request</field>
+            <field name="prefix">PR</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="warehouse_pickup_request_view_form" model="ir.ui.view">
             <field name="name">warehouse.pickup_request.form</field>
             <field name="model">warehouse.pickup_request</field>
             <field name="arch" type="xml">
-                <form string="Warehouse Courier Pickup Request">
+                <form string="Pickup Request">
                     <header>
-                        <button name="action_call_flash_courier"
-                                string="Call Flash Courier"
-                                type="object"
-                                class="oe_highlight"
-                                confirm="Are you sure you want to request a courier pickup from Flash Express?"/>
-                        <field name="state" widget="statusbar" statusbar_visible="draft,requested,confirmed_by_flash,failed"/>
+                        <button name="action_request_pickup" type="object" string="Request Pickup" class="oe_highlight" 
+                                confirm="Are you sure you want to request pickup for these tasks?"/>
+                        <!-- <button name="action_set_done" type="object" string="Set to Done" class="oe_highlight" 
+                                states="requested,in_progress"/>
+                        <button name="action_cancel" type="object" string="Cancel" states="draft,requested,in_progress"/> -->
+                        <field name="status" widget="statusbar" statusbar_visible="draft,requested,done"/>
                     </header>
                     <sheet>
                         <div class="oe_title">
                             <h1>
-                                <field name="name" readonly="1"/>
+                                <field name="name" default_focus="1" placeholder="Pickup Request Name"/>
                             </h1>
                         </div>
-                        <group name="group_top">
-                            <group name="group_left">
-                                <field name="request_date" />
-                                <field name="user_id" readonly="1" options="{'no_create': True, 'no_open': True}"/>
+                        <group>
+                            <group>
+                                <field name="task_count" widget="statinfo" nolabel="1"/>
                             </group>
-                            <group name="group_right">
-                                </group>
                         </group>
+
                         <notebook>
-                            <page string="Pickup Details &amp; API Input" name="pickup_details">
+                            <page string="Tasks to Include">
                                 <group>
-                                    <group string="Parcel Estimation">
-                                        <field name="flash_notify_estimate_parcel_number" />
-                                         <field name="flash_notify_estimate_manual_override"/>
-                                    </group>
-                                    <group string="Courier Remarks">
-                                        <field name="flash_pickup_remark"/>
-                                    </group>
+                                    <field name="selectable_tasks" widget="many2many_tags" 
+                                            context="{'default_status': 'booking'}" 
+                                            placeholder="Select tasks to add..."/>
                                 </group>
-                            </page>
-                            <page string="Associated Tasks" name="tasks">
-                                <div class="oe_button_box" name="button_box">
-                                    <button name="%(action_open_add_task_wizard)d" type="action"
-                                        string="Add Existing Tasks"
-                                        class="oe_stat_button"
-                                        icon="fa-plus-square"
-                                        help="Select existing tasks to associate with this pickup request"
-                                    />
-                                </div>
-                                <field name="task_ids" nolabel="1"
-                                       context="{'default_pickup_request_id': active_id, 'active_test': False}">
-                                    <tree string="Tasks" create="false" delete="true">
+                                <field name="task_ids" mode="tree,kanban" nolabel="1">
+                                    <tree string="Tasks in Request" editable="bottom">
                                         <field name="name"/>
+                                        <field name="sale_order_id"/>
                                         <field name="status"/>
+                                        <field name="customer"/>
+                                        <field name="delivery_contact_name"/>
+                                        <field name="delivery_phone"/>
+                                        <field name="delivery_city"/>
+                                        <field name="delivery_state_id"/>
                                         </tree>
-                                </field>
-                                <separator string="Note on Parcel Estimation"/>
-                                <p class="oe_grey">
-                                    The "Est. Parcel Count for Pickup" might be computed based on the number of associated tasks
-                                    in 'Booking' status. You can manually override this
-                                    value while the request is in the 'Draft' state.
-                                </p>
+                                    </field>
                             </page>
-                            <page string="Flash API Response" name="api_response">
+                            <page string="Other Information">
                                 <group>
-                                     <group string="Flash Ticket Information">
-                                        <field name="flash_ticket_pickup_id" readonly="1"/>
-                                        <field name="flash_timeout_at_text" readonly="1"/>
-                                    </group>
-                                    <group string="Assigned Staff Information">
-                                        <field name="flash_staff_info_name" readonly="1"/>
-                                        <field name="flash_staff_info_phone" readonly="1"/>
-                                    </group>
-                                </group>
-                                <group string="Flash Messages">
-                                     <field name="flash_ticket_message" readonly="1"/>
-                                     <field name="flash_pickup_notice" readonly="1"/>
-                                </group>
-                                <group string="API Call Log">
-                                    <field name="api_call_message" readonly="1" nolabel="1" placeholder="Last API call details..."/>
+                                    <field name="create_uid" readonly="1"/>
+                                    <field name="create_date" readonly="1"/>
+                                    <field name="write_uid" readonly="1"/>
+                                    <field name="write_date" readonly="1"/>
                                 </group>
                             </page>
                         </notebook>
@@ -88,15 +70,40 @@
             </field>
         </record>
 
-        <record id="view_warehouse_pickup_request_tree" model="ir.ui.view">
-            </record>
-        <record id="view_warehouse_pickup_request_search" model="ir.ui.view">
-            </record>
-        <record id="action_warehouse_pickup_request" model="ir.actions.act_window">
-            </record>
-        <menuitem id="menu_warehouse_pickup_request_actions"
-                  name="Flash Courier Pickups"
-                  action="action_warehouse_pickup_request"
-                  parent="menu_warehouse_root"  sequence="150"/>
+        <record id="warehouse_pickup_request_view_tree" model="ir.ui.view">
+            <field name="name">warehouse.pickup_request.tree</field>
+            <field name="model">warehouse.pickup_request</field>
+            <field name="arch" type="xml">
+                <tree string="Pickup Requests">
+                    <field name="name"/>
+                    <!-- <field name="request_date"/> -->
+                    <!-- <field name="courier_id"/> -->
+                    <field name="task_count"/>
+                    <field name="status" widget="badge" 
+                           decoration-success="status == 'done'" 
+                           decoration-info="status == 'requested' or status == 'in_progress'" 
+                           decoration-warning="status == 'draft'"
+                           decoration-danger="status == 'cancelled'"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="warehouse_pickup_request_action" model="ir.actions.act_window">
+            <field name="name">Pickup Requests</field>
+            <field name="res_model">warehouse.pickup_request</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new pickup request!
+                </p><p>
+                    This will allow you to group multiple tasks for courier pickup.
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="warehouse_root_menu" name="Warehouse Operations" sequence="10"/>
+        <menuitem id="warehouse_pickup_request_menu" name="Pickup Requests" parent="warehouse_root_menu" 
+                  action="warehouse_pickup_request_action" sequence="10"/>
+
     </data>
 </odoo>
