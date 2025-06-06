@@ -15,6 +15,7 @@ class PickupRequest(models.Model):
         'warehouse.task',
         'pickup_request_id', # This is the field on the 'warehouse.task' model that links back here.
         string='Tasks in this Request',
+        domain="[('status', '=', 'booking'), ('is_selected', '=', False)]",
         readonly=False, # Allow editing through the UI
     )
 
@@ -33,7 +34,6 @@ class PickupRequest(models.Model):
     status = fields.Selection([
         ('draft', 'Draft'),
         ('requested', 'Requested to Courier'),
-        ('in_progress', 'In Progress'),
         ('done', 'Done'),
         ('cancelled', 'Cancelled')
     ], string='Status', default='draft', tracking=True) # Added tracking for status changes
@@ -79,6 +79,56 @@ class PickupRequest(models.Model):
                             _("The following tasks are already part of another pickup request: %s. Please remove them from this request or the other request first.") % ", ".join(conflicting_tasks.mapped('name'))
                         )
                     
+
+    # NEW OR MODIFIED WRITE METHOD
+    def write(self, vals):
+        if 'task_ids' in vals:
+            # Separate the commands for task_ids
+            task_commands = vals.get('task_ids', [])
+            
+            tasks_to_unlink = self.env['warehouse.task']
+            new_task_commands = []
+
+            for command in task_commands:
+                if command[0] == 2:  # Command (2, ID) means delete
+                    task_id = command[1]
+                    task = self.env['warehouse.task'].browse(task_id)
+                    if task.exists():
+                        tasks_to_unlink += task
+                        # DO NOT ADD THIS COMMAND TO new_task_commands
+                        # We handle the unlinking manually
+                    else:
+                        _logger.warning(f"Attempted to unlink non-existent task with ID: {task_id}")
+                elif command[0] == 3: # Command (3, ID) means unlink, without deleting the record
+                    task_id = command[1]
+                    task = self.env['warehouse.task'].browse(task_id)
+                    if task.exists():
+                        tasks_to_unlink += task
+                    # Also don't add (3, ID) to new_task_commands if we handle it
+                    else:
+                         _logger.warning(f"Attempted to unlink non-existent task with ID: {task_id}")
+                else:
+                    # Keep other commands (0, 1, 4, 5, 6) as they are
+                    new_task_commands.append(command)
+            
+            # Update vals with filtered commands for task_ids
+            vals['task_ids'] = new_task_commands
+            
+            # Perform the parent write operation
+            res = super().write(vals)
+
+            # After the write, perform the actual unlinking of the detected tasks
+            if tasks_to_unlink:
+                _logger.info(f"Unlinking tasks from pickup request: {tasks_to_unlink.mapped('name')}")
+                # Set pickup_request_id to False for these tasks
+                tasks_to_unlink.write({'pickup_request_id': False})
+                # is_selected will recompute automatically
+            return res
+        else:
+            # If 'task_ids' is not in vals, proceed with standard write
+            return super().write(vals)
+
+        return res
 
     # Actions to manage the status
     def action_request_pickup(self):
