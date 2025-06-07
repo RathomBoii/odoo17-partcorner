@@ -16,9 +16,13 @@
             <field name="arch" type="xml">
                 <form string="Pickup Request">
                     <header>
-                        <button name="action_notify_flash_express_courier" type="object" string="Request Pickup" class="oe_highlight" 
+                        <div style="width: 300px; display: flex; justify-content: space-between;">
+                            <button name="action_notify_flash_express_courier" type="object" string="Request Pickup" class="btn-primary" 
                                 confirm="Are you sure you want to request pickup for these tasks?"/>
-                        <field name="status" widget="statusbar" statusbar_visible="draft,requested,done"/>
+                            <button name="action_cancel_notify_flash_express_courier" type="object" string="Cancel Pickup Request" class="btn-danger" 
+                                confirm="Are you sure you want to cancel pickup for these tasks?"/>
+                        </div>
+                        <field name="status" widget="statusbar" statusbar_visible="draft,requested,cancelled,done"/>
                     </header>
                     <sheet>
                         <div class="oe_title">

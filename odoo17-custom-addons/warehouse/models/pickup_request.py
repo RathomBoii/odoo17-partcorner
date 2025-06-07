@@ -261,7 +261,7 @@ class PickupRequest(models.Model):
 
                     self.write({
                         'is_notify_courier_success': False,
-                        'status': 'draft',
+                        'status': 'cancelled',
                         'ticket_pickup_id': "",
                         'staff_info_id': "",
                         'staff_info_name': "",
