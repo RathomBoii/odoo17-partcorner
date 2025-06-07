@@ -16,11 +16,8 @@
             <field name="arch" type="xml">
                 <form string="Pickup Request">
                     <header>
-                        <button name="action_request_pickup" type="object" string="Request Pickup" class="oe_highlight" 
+                        <button name="action_notify_flash_express_courier" type="object" string="Request Pickup" class="oe_highlight" 
                                 confirm="Are you sure you want to request pickup for these tasks?"/>
-                        <!-- <button name="action_set_done" type="object" string="Set to Done" class="oe_highlight" 
-                                states="requested,in_progress"/>
-                        <button name="action_cancel" type="object" string="Cancel" states="draft,requested,in_progress"/> -->
                         <field name="status" widget="statusbar" statusbar_visible="draft,requested,done"/>
                     </header>
                     <sheet>
@@ -30,8 +27,16 @@
                             </h1>
                         </div>
                         <group>
-                            <group>
-                                <field name="task_count" widget="statinfo" nolabel="1"/>
+                            <group string="Pickup Request Information">
+                                <field name="task_count" widget="statinfo" />
+                                <field name="ticket_pickup_id"/>
+                                <field name="staff_info_id"/>
+                                <field name="staff_info_name"/>
+                                <field name="staff_info_phone"/>
+                                <field name="up_country_note"/>
+                                <field name="timeout_at_text"/>
+                                <field name="ticket_message"/>
+                                <field name="notice"/>
                             </group>
                         </group>
 
@@ -45,18 +50,6 @@
                                             context="{'default_status': 'booking'}" 
                                             placeholder="Select tasks to add..."/>
                                 </group>
-                                <!-- <field name="task_ids" mode="tree,kanban" nolabel="1">
-                                    <tree string="Tasks in Request" editable="bottom">
-                                        <field name="name"/>
-                                        <field name="sale_order_id"/>
-                                        <field name="status"/>
-                                        <field name="customer"/>
-                                        <field name="delivery_contact_name"/>
-                                        <field name="delivery_phone"/>
-                                        <field name="delivery_city"/>
-                                        <field name="delivery_state_id"/>
-                                        </tree>
-                                </field> -->
                             </page>
                             <page string="Other Information">
                                 <group>

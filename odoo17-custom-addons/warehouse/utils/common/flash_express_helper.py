@@ -92,6 +92,8 @@ class FlashExpressHelper:
             pno = endpoint_config.get('pno_for_path')
             if not pno: raise UserError("PNO is required for print label endpoint.")
             path = f"/open/v1/orders/{pno}/small/pre_print"
+        elif endpoint_key == "notify":
+            path = "/open/v1/notify"
         elif endpoint_key == "check_status":
             pno = endpoint_config.get('pno_for_path')
             if not pno: raise UserError("PNO is required for check status endpoint.")
@@ -112,7 +114,7 @@ class FlashExpressHelper:
         params_to_sign = {
             "mchId": str(mch_id),
             "nonceStr": self.create_random_string(32),
-            **payload_body_for_signing # Merge endpoint-specific data
+            **payload_body_for_signing # Merge endpoint-specific data using tuple unpacking operator same as js spread operator in object.
         }
         
         data_to_sign_filtered = self.filter_null_key_value(params_to_sign.copy()) # Sign non-null values
@@ -125,3 +127,5 @@ class FlashExpressHelper:
         final_post_payload = params_to_sign.copy()
         final_post_payload["sign"] = final_api_signature
         return final_post_payload
+
+    
