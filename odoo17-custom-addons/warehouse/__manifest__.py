@@ -15,7 +15,7 @@
         'views/actions.xml',
         'views/menus.xml',
         'views/task_views.xml',
-        # 'views/pickup_request_views.xml',
+        'views/pickup_request_views.xml',
         # 'views/warehouse_pickup_add_task_wizard_views.xml'
     ],
     # 'assets': {

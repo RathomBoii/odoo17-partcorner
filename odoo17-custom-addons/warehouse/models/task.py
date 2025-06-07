@@ -8,15 +8,19 @@ from typing import TypedDict, Optional, Any, Dict, List, NamedTuple
 from ..utils.common.flash_express_helper import FlashExpressHelper
 from ..infrastructure.adapter.service.flash_express.flash_express_service import FlashExpressService
 
-from typing import TypedDict, Optional, List, NamedTuple # Or from typing_extensions for older Python 3 versions
-from .types.flash_api_order import FlashAPICreateOrderResponse
-
 _logger = logging.getLogger(__name__)
-
 
 class WarehouseTask(models.Model):
     _name = 'warehouse.task'
     _description = 'Warehouse Task'
+
+    is_selected = fields.Boolean(string='Is Selected?', compute='_compute_is_selected', store=True)
+    pickup_request_id = fields.Many2one(
+        'warehouse.pickup_request',
+        string='Selected in Pickup Request',
+        readonly=True,
+        copy=False,  # Don't copy this relationship when duplicating a resource
+    )
     
     # pickup_request_id = fields.Many2one(
     #     comodel_name='warehouse.pickup_request', # Links to your main model
@@ -90,6 +94,16 @@ class WarehouseTask(models.Model):
     dst_name = fields.Char(string="ชื่อผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
     dst_phone = fields.Char(string="เบอร์โทรผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
     dst_province_name = fields.Char(string="จังหวัดของผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
+    # dst_province_name = fields.Many2one( 
+    #     comodel_name='res.country.state',
+    #     string='Province (Thailand)',
+    #     domain="[('country_id.code', '=', 'TH')]", # Filter by Thailand's country code
+    #     help="Select the province in Thailand.",
+    #     # compute='_compute_flash_api_params', 
+    #     store=True, 
+    #     readonly=False
+    # )
+
     dst_postal_code = fields.Char(string="รหัสไปรษณีย์ของผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
     dst_city_name = fields.Char(string="อำเภอของผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
     dst_detail_address = fields.Char(string="ที่อยู่โดยละเอียดของผู้รับ", compute="_compute_flash_api_params", store=True, readonly=False)
@@ -109,8 +123,38 @@ class WarehouseTask(models.Model):
     flash_latest_route_at = fields.Datetime(string="Latest Route Timestamp", readonly=True, copy=False)
 
     is_delivery_note_printed = fields.Boolean(readonly=True, default=False, copy=False)
+    thailand_province_id = fields.Many2one(
+        comodel_name='res.country.state',
+        string='Province (Thailand)',
+        domain="[('country_id.code', '=', 'TH')]", # Filter by Thailand's country code
+        help="Select the province in Thailand."
+    )
+
+    country_id = fields.Many2one(
+        'res.country',
+        related='thailand_province_id.country_id',
+        string='Country',
+        store=True, # Store for better performance if you filter by it
+        readonly=True
+    )
     is_create_flash_order_success = fields.Boolean(readonly=True, default=False, copy=False)
+
+    #  Add a compute method for determine whether record are available for pickup_request model or not.
+    @api.depends('pickup_request_id')
+    def _compute_is_selected(self):
+        for record in self:
+            record.is_selected  = bool(record.pickup_request_id)
     
+    # The constraint on 'pickup_request_id' is also good, but can be simplified if you rely on the Odoo ORM's handling.
+    # The constraint in PickupRequest: _check_unique_tasks will be more robust.
+    @api.constrains('pickup_request_id')
+    def _check_single_pickup_request_id(self):
+        for record in self:
+            # The logic here is already handled by the _check_unique_tasks on the pickup_request side
+            # This constraint isn't strictly necessary if _check_unique_tasks is robust.
+            # You might remove this if the _check_unique_tasks in pickup_request is sufficient.
+            pass
+
     @api.depends('sale_order_id', 'shipping_partner_id') # Add relevant dependencies
     def _compute_flash_api_params(self):
         for record in self:
