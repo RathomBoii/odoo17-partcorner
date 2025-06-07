@@ -52,3 +52,7 @@ package.json
 /man/
 /share/
 /src/
+
+
+# any data which may contain credential
+*.csv
