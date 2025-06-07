@@ -142,11 +142,13 @@ class FlashExpressService:
         return self._make_api_call(api_url, signed_payload, expected_content_type='pdf', timeout=90)
     
     def notify_courier_to_pick_up(self, pickup_request_record):
+        is_pickup_request_is_in_valid_status = pickup_request_record.status in ['draft', 'cancelled']
+        if not is_pickup_request_is_in_valid_status:
+            raise UserError("Flash Express courier can be called only when Pickup Request status is 'draft' or 'cancelled'.")
+
         if not pickup_request_record.task_count:
             _logger.warning(f"Pickup_Request {pickup_request_record.name}: Not included with any tasks. Please add tasks to Pickup Request.")
             return {"code": 0, "message": "Tasks is empty."}
-        if pickup_request_record.status != 'draft':
-            raise UserError("Flash Express courier can be called only when Pickup Request status is 'draft'.")
 
         api_url, mch_id, secret_key = self.flash_helper.get_api_credentials_and_url({'key': "notify"})
         

@@ -53,20 +53,44 @@ class PickupRequest(models.Model):
     is_notify_courier_success = fields.Boolean(readonly=True, copy=False)
 
     # Method to update task_ids when selectable_tasks changes
-    @api.onchange('selectable_tasks')
+    # @api.onchange('selectable_tasks')
+    # def _onchange_selectable_tasks(self):
+    #     if self.selectable_tasks:
+    #         # Add newly selected tasks to task_ids
+    #         new_tasks = self.selectable_tasks - self.task_ids # type: ignore
+    #         is_able_to_add_task = self.status == 'draft' or 'cancelled'
+    #         if new_tasks and is_able_to_add_task:
+    #             self.task_ids += new_tasks
+    #             # Clear selectable_tasks after moving them to task_ids
+    #             self.selectable_tasks = [(5, 0, 0)] 
+            
+    #         elif new_tasks and not is_able_to_add_task:
+    #             raise UserError("Cannot add tasks to a confirmed pickup request.")
+
+    #         # Remove tasks from task_ids if they were unselected from selectable_tasks 
+    #         # (though with the current logic, this might be less common as they move directly)
+    #         # This part needs careful consideration if tasks can be "unselected" from task_ids directly.
+    #         # For simplicity, we assume tasks are added via selectable_tasks and then managed via task_ids.
+    # @api.onchange('selectable_tasks')
+    @api.onchange('task_ids')
     def _onchange_selectable_tasks(self):
+        # Check if adding tasks is allowed based on the current status
+        if self.status not in ('draft', 'cancelled'):
+            # If not allowed, raise an error immediately.
+            # This will prevent the tasks from being added to the One2many field.
+            raise UserError(_("You cannot add tasks to a pickup request that is in '%s' status. Tasks can only be added in 'Draft' or 'Cancelled' status.") % self.status.capitalize())
+        
+        # If the status allows, proceed with the original logic for adding tasks
         if self.selectable_tasks:
             # Add newly selected tasks to task_ids
             new_tasks = self.selectable_tasks - self.task_ids # type: ignore
             if new_tasks:
                 self.task_ids += new_tasks
                 # Clear selectable_tasks after moving them to task_ids
-                self.selectable_tasks = [(5, 0, 0)] 
-            
-            # Remove tasks from task_ids if they were unselected from selectable_tasks 
-            # (though with the current logic, this might be less common as they move directly)
-            # This part needs careful consideration if tasks can be "unselected" from task_ids directly.
-            # For simplicity, we assume tasks are added via selectable_tasks and then managed via task_ids.
+                self.selectable_tasks = [(5, 0, 0)]
+            # If selectable_tasks has tasks that were already in task_ids (shouldn't happen with current UI/domain)
+            # or if tasks were deselected from selectable_tasks (not typical for this pattern)
+            # The write method and ondelete='set null' handle actual removal from task_ids.
 
     @api.depends('task_ids')
     def _compute_task_count(self):
@@ -101,11 +125,14 @@ class PickupRequest(models.Model):
             tasks_to_unlink = self.env['warehouse.task']
             new_task_commands = []
 
+            is_can_unlink_tasks = self.status in ('draft', 'cancelled')
             for command in task_commands:
                 if command[0] == 2:  # Command (2, ID) means delete
                     task_id = command[1]
                     task = self.env['warehouse.task'].browse(task_id)
                     if task.exists():
+                        if not is_can_unlink_tasks:
+                            raise UserError(_("You cannot unlink tasks from a confirmed pickup request."))
                         tasks_to_unlink += task
                         # DO NOT ADD THIS COMMAND TO new_task_commands
                         # We handle the unlinking manually
@@ -115,6 +142,8 @@ class PickupRequest(models.Model):
                     task_id = command[1]
                     task = self.env['warehouse.task'].browse(task_id)
                     if task.exists():
+                        if not is_can_unlink_tasks:
+                            raise UserError(_("You cannot unlink tasks from a confirmed pickup request."))
                         tasks_to_unlink += task
                     # Also don't add (3, ID) to new_task_commands if we handle it
                     else:
@@ -129,15 +158,13 @@ class PickupRequest(models.Model):
             # Perform the parent write operation
             res = super().write(vals)
 
-            is_task_unlinkable = self.status == 'draft'
-
             # After the write, perform the actual unlinking of the detected tasks
-            if tasks_to_unlink and is_task_unlinkable :
+            if tasks_to_unlink :
                 _logger.info(f"Unlinking tasks from pickup request: {tasks_to_unlink.mapped('name')}")
                 # Set pickup_request_id to False for these tasks
                 tasks_to_unlink.write({'pickup_request_id': False})
                 # is_selected will recompute automatically
-            elif tasks_to_unlink and not is_task_unlinkable:
+            elif tasks_to_unlink:
                 raise UserError(_("You cannot unlink tasks from a already requested pickup request."))
             return res
         else:
