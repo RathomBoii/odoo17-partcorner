@@ -129,12 +129,16 @@ class PickupRequest(models.Model):
             # Perform the parent write operation
             res = super().write(vals)
 
+            is_task_unlinkable = self.status == 'draft'
+
             # After the write, perform the actual unlinking of the detected tasks
-            if tasks_to_unlink:
+            if tasks_to_unlink and is_task_unlinkable :
                 _logger.info(f"Unlinking tasks from pickup request: {tasks_to_unlink.mapped('name')}")
                 # Set pickup_request_id to False for these tasks
                 tasks_to_unlink.write({'pickup_request_id': False})
                 # is_selected will recompute automatically
+            elif tasks_to_unlink and not is_task_unlinkable:
+                raise UserError(_("You cannot unlink tasks from a already requested pickup request."))
             return res
         else:
             # If 'task_ids' is not in vals, proceed with standard write
