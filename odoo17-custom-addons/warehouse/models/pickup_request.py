@@ -240,3 +240,65 @@ class PickupRequest(models.Model):
         except Exception as e:
             _logger.error(f"Task {self.name}: Unexpected error notifying Flash pickup: {e}", exc_info=True)
             raise UserError(_("An unexpected system error occurred: %s", str(e)))
+        
+
+    # --- Cancel Call Courier Action ---
+    def action_cancel_notify_flash_express_courier(self):
+        self.ensure_one()
+        _logger.info(f"Pickup Request {self.name}: User triggered Flash Express cancel notify courier.")
+
+        _logger.info(f"record data {self}")
+        
+        flash_service = self._get_flash_service()
+        try:
+            result = flash_service.cancel_notify_courier_to_pick_up(self)
+            _logger.info(f"result JSON {result}")
+            _logger.info(f"Pickup Request {self.name}: Cancel notify courier API result: {result}")
+
+            if result and isinstance(result, dict):
+                if result.get("code") == 1:
+
+
+                    self.write({
+                        'is_notify_courier_success': False,
+                        'status': 'draft',
+                        'ticket_pickup_id': "",
+                        'staff_info_id': "",
+                        'staff_info_name': "",
+                        'staff_info_phone': "",
+                        'up_country_note': "",
+                        'timeout_at_text': "",
+                        'ticket_message': "",
+                    })
+
+                    # Reload current page to see latest data from API call
+                    return {
+                        'type': 'ir.actions.act_window',
+                        'res_model': self._name,
+                        'res_id': self.id, # type: ignore
+                        'view_mode': 'form',
+                        'views': [[False, 'form']], # You can specify a particular form view ID if needed: [[view_id, 'form']]
+                        'target': 'current', # Reopens in the current view, effectively refreshing it
+                        # Optionally, you can still send a notification before reloading
+                        # by returning a list of actions or by using the bus.
+                        # For simplicity, a direct reload is shown here.
+                        # If you want a notification first, it's more complex; usually, a reload is enough.
+                    }
+                elif result.get("code") == 0 and "already canceled" in result.get("message", "").lower(): # Specific case
+                    return {
+                        'type': 'ir.actions.client', 'tag': 'display_notification',
+                        'params': {
+                            'title': _('Information'), 'message': result.get("message"),
+                            'type': 'info', 'sticky': False,
+                        }}
+                else: # Flash API business error
+                    error_message = result.get("message", "API call failed or returned unexpected data.")
+                    raise UserError(_("Flash Express API Error: %s", error_message))
+            else: # Unexpected response format from service
+                raise UserError(_("Flash Express API call returned an unexpected result format."))
+        except UserError as ue: # Catch UserErrors from service or here
+            _logger.error(f"Task {self.name}: UserError cancel notifying Flash pickup: {ue}")
+            raise # Re-raise for Odoo to display
+        except Exception as e:
+            _logger.error(f"Task {self.name}: Unexpected error cancel notifying Flash pickup: {e}", exc_info=True)
+            raise UserError(_("An unexpected system error occurred: %s", str(e)))

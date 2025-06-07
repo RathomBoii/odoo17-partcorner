@@ -164,6 +164,22 @@ class FlashExpressService:
         signed_payload = self.flash_helper.generate_signed_payload(payload_body, mch_id, secret_key)
         return self._make_api_call(api_url, signed_payload, expected_content_type='json')
 
+    def cancel_notify_courier_to_pick_up(self, pickup_request_record):
+        if not pickup_request_record.status == 'requested':
+            _logger.warning(f"Pickup_Request {pickup_request_record.name}: Not in 'requested' status.")
+            return {"code": 0, "message": "Pickup request is not in 'requested' status."}
+
+
+        api_url, mch_id, secret_key = self.flash_helper.get_api_credentials_and_url({'key': "cancel_notification"})
+
+        #  api_url will be "/open/v1/notify/{id}/cancel" from helper's method
+        api_url_with_ticket_pickup_id = api_url.replace("{id}", str(pickup_request_record.ticket_pickup_id))
+
+        payload_body = {} # this endpoint not need any additional field in request body more than mcId, noneStr and sign which are already include in helper.generate_signed_payload result
+
+        signed_payload = self.flash_helper.generate_signed_payload(payload_body, mch_id, secret_key)
+        return self._make_api_call(api_url_with_ticket_pickup_id, signed_payload, expected_content_type='json')
+
     def check_status(self, task_record):
         if not task_record.delivery_order_id:
             raise UserError("Flash Express PNO (tracking number) is not set. Cannot check status.")
