@@ -1,6 +1,7 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
-import uuid
+from ...common.static.allowed_status_transition_dict import allowed_status_transition_dict
+from ...common.static.status import wip_and_task_status
 
 class ProcessWIP(models.Model):
     _name = 'process.wip'
@@ -8,30 +9,15 @@ class ProcessWIP(models.Model):
 
     sale_order_id = fields.Many2one('sale.order', required=True, string="Sale Order ID")
     customer = fields.Many2one('res.partner', related='sale_order_id.partner_id', string="Customer", readonly=True)
-    # related='sale_order_id.partner_id' => which partner_id to fetch
-    # fields.Many2one('res.partner' => which model to fetch
-    # customer = fields.Char(related='sale_order_id.partner_id.name', string="Customer", readonly=True)
     created_date = fields.Datetime(default=fields.Datetime.now, readonly=True)
-    status = fields.Selection([
-        ('order_received', 'Order Received'), 
-        ('kitting', 'Kitting'), 
-        ('checking', 'Checking'), 
-        ('packing', 'Packing'),
-        ('booking', 'Booking'), 
-        ('pick_up_by_courier', 'Pick Up By Courier'), 
-        ('done', 'Done')
-    ], default='order_received')
+
+    
+    status = fields.Selection(wip_and_task_status, default='order_received')
 
     total = fields.Float(readonly=True, compute="_compute_invoice_delivery_total")
     invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery_total")
     delivery_id = fields.Many2one('stock.picking',  string="Delivery Note", compute="_compute_invoice_delivery_total")
     
-    # pickup_date = fields.Datetime(string="Courier Pick Up Date")
-    # delivered_date = fields.Datetime()
-
-    # token for qr code scaning
-    token = fields.Char(default=lambda self: str(uuid.uuid4()), readonly=True, copy=False)
-
     # link to wip logs data history
     wip_log_ids = fields.One2many('process.wip.log', 'wip_id', string="WIP History", readonly="True")
 
@@ -61,16 +47,7 @@ class ProcessWIP(models.Model):
         return super().write(vals)
 
     @api.onchange('status')
-    def _onchange_status(self):
-        allowed_status_transition_dict = {
-            'order_received': ['kitting'],
-            'kitting': ['checking'],
-            'checking': ['packing'],
-            'packing': ['booking'],
-            'booking': ['pick_up_by_courier'],
-            'pick_up_by_courier': ['done'],
-            'done': []
-        }
+    def _onchange_status(self): 
         for record in self:
             if record.status and record._origin.status:
                 # check if there are both original status and preferred status

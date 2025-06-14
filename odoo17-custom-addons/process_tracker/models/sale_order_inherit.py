@@ -1,7 +1,7 @@
 from odoo import models, api, fields
 import datetime
 import pytz
-from odoo.exceptions import UserError
+from ...common.static.status import sale_portal_status_display_map
 
 class SaleOrderInherit(models.Model):
     _inherit = 'sale.order'
@@ -9,12 +9,12 @@ class SaleOrderInherit(models.Model):
     current_wip_status = fields.Char(string="WIP Status", compute="_compute_current_wip_status")
 
     def action_confirm(self):
-        res = super().action_confirm()
+        res = super().action_confirm() # type: ignore
 
         for sale_order in self:
             delivery_notes = self.env['stock.picking'].search(
                 [
-                    ('origin', '=', sale_order.name )
+                    ('origin', '=', sale_order.name ) # type: ignore
                 ]
             )
             for delivery_note in delivery_notes:
@@ -22,20 +22,16 @@ class SaleOrderInherit(models.Model):
         return res
 
 
-    @api.depends('order_line')  # anything to trigger recompute; you can adjust this
+    """
+    This method map the wip (also warehouse.task)'s status and sale order status which display on the sale portal view that user will see on web site.
+    """
+    @api.depends('order_line')  
     def _compute_current_wip_status(self):
-        status_display_map = {
-            'order_received': 'Preparing',
-            'kitting': 'Preparing',
-            'checking': 'Preparing',
-            'packing': 'Packing',
-            'booking': 'On Delivery',
-            'pick_up_by_courier': 'On delivery',
-            'done': 'Delivered'
-        }
+        status_display_map = sale_portal_status_display_map
+
         for order in self:
             latest_wip = self.env['process.wip'].search([
-                ('sale_order_id', '=', order.id)
+                ('sale_order_id', '=', order.id) # type: ignore
             ], order='created_date desc', limit=1)
             if latest_wip:
             # Use mapped status if available, otherwise fallback to original
@@ -43,7 +39,10 @@ class SaleOrderInherit(models.Model):
             else:
                 order.current_wip_status = ''
 
-    # override Sale.order's create() method
+    """
+    This method determine the which corresponding record will be created  
+    based on occur sale order at the time of creation. (create wip or backlog)  
+    """
     @api.model
     def create(self, vals):
         record = super().create(vals)
