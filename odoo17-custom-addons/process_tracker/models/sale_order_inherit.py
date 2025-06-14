@@ -1,7 +1,7 @@
 from odoo import models, api, fields
 import datetime
 import pytz
-from odoo.exceptions import UserError
+from ...common.static.status import sale_portal_status_display_map
 
 class SaleOrderInherit(models.Model):
     _inherit = 'sale.order'
@@ -27,28 +27,11 @@ class SaleOrderInherit(models.Model):
     """
     @api.depends('order_line')  
     def _compute_current_wip_status(self):
-        status_display_map = {
-            'order_received': 'Preparing',
-            'kitting': 'Preparing',
-            'checking': 'Preparing',
-            'packing': 'Packing',
-            'delivery_order_created': 'Ready to ship',
-            'courier_pickup_requested': 'Courier is going to pick up',
-            'pick_up_by_courier': 'Courier picked up',
-            'in_transit': 'In Transit',
-            'delivering': 'Delivering',
-            'detained': 'Detained',
-            'signed': 'Delivered',
-            'problem_shipment_being_processed': 'Problem Shipment Being Processed',
-            'returned_shipment': 'Returned Shipment',
-            'close_by_exception': 'Close By Exception',
-            'cancelled': 'Cancelled',
-            'done': 'Delivered'
-        }
+        status_display_map = sale_portal_status_display_map
 
         for order in self:
             latest_wip = self.env['process.wip'].search([
-                ('sale_order_id', '=', order.id)
+                ('sale_order_id', '=', order.id) # type: ignore
             ], order='created_date desc', limit=1)
             if latest_wip:
             # Use mapped status if available, otherwise fallback to original

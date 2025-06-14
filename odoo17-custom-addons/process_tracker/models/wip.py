@@ -1,5 +1,7 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
+from ...common.static.allowed_status_transition_dict import allowed_status_transition_dict
+from ...common.static.status import wip_and_task_status
 
 class ProcessWIP(models.Model):
     _name = 'process.wip'
@@ -9,36 +11,8 @@ class ProcessWIP(models.Model):
     customer = fields.Many2one('res.partner', related='sale_order_id.partner_id', string="Customer", readonly=True)
     created_date = fields.Datetime(default=fields.Datetime.now, readonly=True)
 
-    """
-    These following are the possible statuses and it's number we will received from Flash Express webhook:
-        1=Picked Up (รับพัสดุแล้ว)
-        2=In transit (ระหว่างการขนส่ง)
-        3=Delivering (ระหว่างการจัดส่ง)
-        4=Detained (พัสดุคงคลัง)
-        5=Signed (เซ็นรับแล้ว)
-        6=Problem shipment being processed (ระหว่างจัดการพัสดุมีปัญหา)
-        7=Returned shipment (พัสดุตีกลับแล้ว)
-        8=Close by exception (ปิดงานมีปัญหา)
-        9=Cancelled (เรียกคืนพัสดุแล้ว)
-    """
-    status = fields.Selection([
-        ('order_received', 'Order Received'), 
-        ('kitting', 'Kitting'), 
-        ('checking', 'Checking'), 
-        ('packing', 'Packing'),
-        ('delivery_order_created', 'Delivery Order Created'),
-        ('courier_pickup_requested', 'Courier Pickup Requested'),
-        ('pick_up_by_courier', 'Pick Up By Courier'), 
-        ('in_transit', 'In Transit'),
-        ('delivering', 'Delivering'),
-        ('detained', 'Detained'),
-        ('signed', 'Signed'),
-        ('problem_shipment_being_processed', 'Problem Shipment Being Processed'),
-        ('returned_shipment', 'Returned Shipment'),
-        ('close_by_exception', 'Close By Exception'),
-        ('cancelled', 'Cancelled'),
-        ('done', 'Done')
-    ], default='order_received')
+    
+    status = fields.Selection(wip_and_task_status, default='order_received')
 
     total = fields.Float(readonly=True, compute="_compute_invoice_delivery_total")
     invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery_total")
@@ -73,91 +47,7 @@ class ProcessWIP(models.Model):
         return super().write(vals)
 
     @api.onchange('status')
-    def _onchange_status(self):
-
-
-    #     status = fields.Selection([
-    #     ('order_received', 'Order Received'), 
-    #     ('kitting', 'Kitting'), 
-    #     ('checking', 'Checking'), 
-    #     ('packing', 'Packing'),
-    #     ('delivery_order_created', 'Delivery Order Created'),
-    #     ('courier_pickup_requested', 'Courier Pickup Requested'),
-    #     ('pick_up_by_courier', 'Pick Up By Courier'), 
-    #     ('in_transit', 'In Transit'),
-    #     ('delivering', 'Delivering'),
-    #     ('detained', 'Detained'),
-    #     ('signed', 'Signed'),
-    #     ('problem_shipment_being_processed', 'Problem Shipment Being Processed'),
-    #     ('returned_shipment', 'Returned Shipment'),
-    #     ('close_by_exception', 'Close By Exception'),
-    #     ('cancelled', 'Cancelled'),
-    #     ('done', 'Done')
-    # ], default='order_received')
-
-
-        """
-        Because of the Flash Express status , we do not know how they transition the status, 
-        so I define with no backward and forward transition constraint.
-        In contrast for internal statuses (  'order_received', 'kitting', 'checking', 'packing', etc. ), it need to have a constraint that
-        """
-        allowed_status_transition_dict = {
-    # These first four statuses retain their original, specific transitions
-    'order_received': ['kitting'],
-    'kitting': ['checking'],
-    'checking': ['packing'],
-    'packing': ['delivery_order_created'],
-
-    # For the delivery statuses, each can transition to any other delivery status.
-    # The key itself is excluded from its own list of possible transitions.
-    'delivery_order_created': [
-        'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 'signed', 
-        'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
-    ],
-    'courier_pickup_requested': [
-        'delivery_order_created', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 'signed', 
-        'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
-    ],
-    'pick_up_by_courier': [
-        'delivery_order_created', 'courier_pickup_requested', 'in_transit', 'delivering', 'detained', 'signed', 
-        'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
-    ],
-    'in_transit': [
-        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'delivering', 'detained', 'signed', 
-        'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
-    ],
-    'delivering': [
-        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'detained', 'signed', 
-        'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
-    ],
-    'detained': [
-        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'signed', 
-        'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
-    ],
-    'signed': [
-        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 
-        'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
-    ],
-    'problem_shipment_being_processed': [
-        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 'signed', 
-        'returned_shipment', 'close_by_exception', 'cancelled', 'done'
-    ],
-    'returned_shipment': [
-        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 'signed', 
-        'problem_shipment_being_processed', 'close_by_exception', 'cancelled', 'done'
-    ],
-    'close_by_exception': [
-        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 'signed', 
-        'problem_shipment_being_processed', 'returned_shipment', 'cancelled', 'done'
-    ],
-    'cancelled': [
-        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 'signed', 
-        'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'done'
-    ],
-    
-    # 'done' is a terminal state and has no further transitions.
-    'done': []
-}
+    def _onchange_status(self): 
         for record in self:
             if record.status and record._origin.status:
                 # check if there are both original status and preferred status
