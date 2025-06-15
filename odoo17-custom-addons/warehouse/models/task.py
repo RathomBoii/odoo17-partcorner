@@ -274,11 +274,37 @@ class WarehouseTask(models.Model):
 
     # --- ORM METHODS (CREATE, WRITE) ---
     def write(self, vals):
-        # First, save the changes to the current model (warehouse.task)
+        # --- VALIDATION BLOCK (RUNS BEFORE WRITING) ---
+        if 'status' in vals or 'flash_express_status' in vals:
+            if not wip_and_task_allowed_status_transition:
+                raise ValidationError("Status transition rules are not defined.")
+
+            for record in self:
+                # Validate internal 'status' transition
+                if 'status' in vals:
+                    previous_status = record.status
+                    preferred_status = vals['status']
+                    allowed_transitions = wip_and_task_allowed_status_transition.get(previous_status, []) # type: ignore
+                    if preferred_status not in allowed_transitions:
+                        raise ValidationError(f"ไม่สามารถเปลี่ยนสถานะข้ามขั้นตอนได้ จาก '{previous_status}' ไปสู่ '{preferred_status}'.")
+                    if preferred_status == "kitting" and not record.is_delivery_note_printed:
+                        raise ValidationError("ไม่สามารถเปลี่ยนสถานะเป็น 'kitting' ได้ เนื่องจากยังไม่ได้ปริ้น Delivery Note.")
+                    if preferred_status == "done" and not record.is_create_flash_order_success:
+                        raise ValidationError("ไม่สามารถเปลี่ยนสถานะเป็น 'done' ได้ เนื่องจากยังไม่ได้สร้าง Flash Express order.")
+
+                # Validate 'flash_express_status' transition
+                # This section is not used for internal status, but for Flash Express status, user can not change flash_express_status
+                if 'flash_express_status' in vals:
+                    previous_flash_status = record.flash_express_status
+                    preferred_flash_status = vals['flash_express_status']
+                    allowed_flash_transitions = wip_and_task_allowed_status_transition.get(previous_flash_status, []) # type: ignore
+                    if preferred_flash_status not in allowed_flash_transitions:
+                        raise ValidationError(f"ไม่สามารถเปลี่ยนสถานะ Flash Express ข้ามขั้นตอนได้ จาก '{previous_flash_status}' ไปสู่ '{preferred_flash_status}'.")
+
+        # --- DATABASE WRITE (Only runs if validation passes) ---
         res = super().write(vals)
 
-        # --- Handle Side Effects and Synchronization AFTER the write ---
-
+        # --- SIDE EFFECTS & SYNCHRONIZATION (Runs after successful write) ---
         # 1. Sync specified fields to the related process.wip
         if not self.env.context.get('from_wip'): # Prevent echo loop
             fields_to_sync = ['status', 'flash_express_status', 'flash_express_order_id']
@@ -293,7 +319,6 @@ class WarehouseTask(models.Model):
         if vals.get('flash_express_status') == 'signed':
             for record in self:
                 if record.status != 'done' and record.is_create_flash_order_success:
-                    # This write will be caught by the sync logic above and sent to process.wip
                     record.write({'status': 'done'})
 
         return res
