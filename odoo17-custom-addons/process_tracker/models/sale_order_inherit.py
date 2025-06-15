@@ -24,20 +24,34 @@ class SaleOrderInherit(models.Model):
 
     """
     This method map the wip (also warehouse.task)'s status and sale order status which display on the sale portal view that user will see on web site.
+    If there are no Flash Order created, display PartCorners status
+    else, display Flash Express status.
     """
     @api.depends('order_line')  
     def _compute_current_wip_status(self):
-        status_display_map = sale_portal_status_display_map
 
         for order in self:
             latest_wip = self.env['process.wip'].search([
                 ('sale_order_id', '=', order.id) # type: ignore
             ], order='created_date desc', limit=1)
             if latest_wip:
-            # Use mapped status if available, otherwise fallback to original
-                order.current_wip_status = status_display_map.get(latest_wip.status, latest_wip.status)
+                """
+                Dynamically display customer order's status based on flash_express_order_id.
+                Make default to be its original status if flash_express_order_id is not set.
+                """
+                is_flash_express_process_started = latest_wip.flash_express_order_id
+                if is_flash_express_process_started:
+                    order.current_wip_status = sale_portal_status_display_map.get(latest_wip.flash_express_status, latest_wip.flash_express_status) 
+                else:
+                    """
+                    Use mapped status if available, otherwise fallback to original
+                    """
+                    order.current_wip_status = sale_portal_status_display_map.get(latest_wip.status, latest_wip.status)
             else:
-                order.current_wip_status = ''
+                """
+                If no WIP record found, default to 'Order Received', for customer experience.
+                """ 
+                order.current_wip_status = 'Order Received' 
 
     """
     This method determine the which corresponding record will be created  

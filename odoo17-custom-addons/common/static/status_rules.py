@@ -3,13 +3,18 @@ Because of the Flash Express status , we do not know how they transition the sta
 so I define with no backward and forward transition constraint.
 In contrast for internal statuses (  'order_received', 'kitting', 'checking', 'packing', etc. ), it need to have a constraint that
 """
-allowed_status_transition_dict = {
+wip_and_task_allowed_status_transition = {
     'order_received': ['kitting'],
     'kitting': ['checking'],
     'checking': ['packing'],
-    'packing': ['delivery_order_created'],
+    'packing': ['done'], # packing can be transitioned to done when order is signed by customer
     # For the delivery statuses, each can transition to any other delivery status.
     # The key itself is excluded from its own list of possible transitions.
+    'pending': [
+        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering',
+        'detained', 'signed', 'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception',
+        'cancelled', 'done'
+    ],
     'delivery_order_created': [
         'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 'signed', 
         'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
@@ -34,10 +39,8 @@ allowed_status_transition_dict = {
         'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'signed', 
         'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
     ],
-    'signed': [
-        'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 
-        'problem_shipment_being_processed', 'returned_shipment', 'close_by_exception', 'cancelled', 'done'
-    ],
+    # 'signed' is a terminal state and has no further transitions.
+    'signed': [],
     'problem_shipment_being_processed': [
         'delivery_order_created', 'courier_pickup_requested', 'pick_up_by_courier', 'in_transit', 'delivering', 'detained', 'signed', 
         'returned_shipment', 'close_by_exception', 'cancelled', 'done'
@@ -56,4 +59,13 @@ allowed_status_transition_dict = {
     ],
     # 'done' is a terminal state and has no further transitions.
     'done': []
-}   
+} 
+
+pickup_request_allowed_status_transition = {
+    'draft': ['awaiting_allocation'],
+    'awaiting_allocation': ['awaiting_to_pickup', 'cancelled'],
+    'awaiting_to_pickup': ['picked_up', 'cancelled'],
+    'picked_up': ['task_handovered', 'cancelled'],
+    'task_handovered': ['cancelled'],
+    'cancelled': [],
+}

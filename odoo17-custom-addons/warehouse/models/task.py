@@ -3,10 +3,11 @@ from odoo.exceptions import ValidationError, UserError
 import logging
 import json
 import base64
-from typing import TypedDict, Optional, Any, Dict, List, NamedTuple
 
 from ..utils.common.flash_express_helper import FlashExpressHelper
 from ..infrastructure.adapter.service.flash_express.flash_express_service import FlashExpressService
+from ...common.static.status import part_corner_wip_and_task_status
+from ...common.static.status_rules import wip_and_task_allowed_status_transition
 
 _logger = logging.getLogger(__name__)
 
@@ -22,29 +23,23 @@ class WarehouseTask(models.Model):
         copy=False,  # Don't copy this relationship when duplicating a resource
     )
     
-    # pickup_request_id = fields.Many2one(
-    #     comodel_name='warehouse.pickup_request', # Links to your main model
-    #     string='Warehouse Pickup Request',
-    #     ondelete='cascade',  # Or 'set null' depending on how you want to handle deletion.
-    #                      # 'cascade' will delete linked tasks if the pickup request is deleted.
-    #                      # 'set null' will set this field to null if the pickup request is deleted.
-    #     index=True,      # Good for performance if you search/filter by this field
-    #     copy=False       # Usually, you don't want to copy this link when duplicating a task
-    # )
+    """
+    pickup_request_id = fields.Many2one(
+        comodel_name='warehouse.pickup_request', # Links to your main model
+        string='Warehouse Pickup Request',
+        ondelete='cascade',  # Or 'set null' depending on how you want to handle deletion.
+                        - 'cascade' will delete linked tasks if the pickup request is deleted.
+                        - 'set null' will set this field to null if the pickup request is deleted.
+        index=True,     - Good for performance if you search/filter by this field
+        copy=False      - Usually, you don't want to copy this link when duplicating a task
+     )
+    """
 
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True)
     process_wip_id = fields.Many2one('process.wip', string='Process WIP', required=True)
     name = fields.Char(string="Task Name", required=True)
     assignee = fields.Many2one('res.users', string='Assignee')
-    status = fields.Selection([
-        ('order_received', 'Order Received'), 
-        ('kitting', 'Kitting'), 
-        ('checking', 'Checking'), 
-        ('packing', 'Packing'),
-        ('booking', 'Booking'), 
-        ('pick_up_by_courier', 'Pick Up By Courier'), 
-        ('done', 'Done')
-    ], default='order_received')
+    status = fields.Selection(part_corner_wip_and_task_status, default='order_received')
 
     delivery_id = fields.Many2one('stock.picking', related='process_wip_id.delivery_id')
 
@@ -68,12 +63,15 @@ class WarehouseTask(models.Model):
     delivery_zip = fields.Char(related='shipping_partner_id.zip', string="ZIP Code", readonly=True, store=True)
     delivery_country_id = fields.Many2one(related='shipping_partner_id.country_id', string="Country", readonly=True, store=True)
 
+    """
+    These are the available Flash Express's express categories, but right now we only support '1' (ธรรมดา) for normal delivery.
+        ('2' , 'On-Time Delivery'),
+        ('4' , 'ราคาพิเศษสำหรับพัสดุขนาดใหญ่'),
+        ('6' , 'Happy Return'),
+        ('7' , 'Happy Return Bulky'),
+    """
     express_category = fields.Selection([
         ('1' , 'ธรรมดา'),
-        # ('2' , 'On-Time Delivery'),
-        # ('4' , 'ราคาพิเศษสำหรับพัสดุขนาดใหญ่'),
-        # ('6' , 'Happy Return'),
-        # ('7' , 'Happy Return Bulky'),
     ], default='1', string='ประเภทการจัดส่ง:')
 
     article_category = fields.Selection([
@@ -171,16 +169,6 @@ class WarehouseTask(models.Model):
                 if record.shipping_partner_id.street2: # type: ignore
                     record.dst_detail_address += " " + record.shipping_partner_id.street2 # type: ignore
 
-    allowed_status_transition_dict = {
-            'order_received': ['kitting'],
-            'kitting': ['checking'],
-            'checking': ['packing'],
-            'packing': ['booking'],
-            'booking': ['pick_up_by_courier'],
-            'pick_up_by_courier': ['done'],
-            'done': []
-        }
-    
     def write(self, vals):
         # Synchronize status changes with process.wip
         if 'status' in vals and not self.env.context.get('from_wip'):
@@ -196,19 +184,17 @@ class WarehouseTask(models.Model):
                     record.express_category = '1'
                     return {'domain': {'expres_category': "[('id', 'in', ['1'])]"}}
 
-    # todo: return these         
     @api.onchange('status')
     def _onchange_status(self):
         for record in self:
-            if not record.allowed_status_transition_dict:
-                raise ValidationError("ไม่สามารถเปลี่ยน status ได้ เนื่องจากไม่มี allowed_status_transition_dict.")
+            if not wip_and_task_allowed_status_transition:
+                raise ValidationError("ไม่สามารถเปลี่ยน status ได้ เนื่องจากไม่มี wip_and_task_allowed_status_transition.")
             if record.status and record._origin.status:
-                allowed_status_transition_dict = record.allowed_status_transition_dict
                 # check if there are both original status and preferred status
                 # check if prefered status in allowed status list for original status 
                 preferred_status = record.status
                 previous_status = record._origin.status
-                is_valid_transition = preferred_status in allowed_status_transition_dict.get(previous_status,[]) # type: ignore
+                is_valid_transition = preferred_status in wip_and_task_allowed_status_transition.get(previous_status, [])  # type: ignore
 
                 if preferred_status == "booking":
                     if not record.is_create_flash_order_success:
@@ -351,7 +337,7 @@ class WarehouseTask(models.Model):
         _logger.info(f"Task {self.name}: User triggered status check for PNO {self.delivery_order_id}.")
 
         if not self.delivery_order_id:
-             return {
+            return {
                 'type': 'ir.actions.client', 'tag': 'display_notification',
                 'params': {
                     'title': _('Error'),

@@ -10,24 +10,46 @@
         8=Close by exception (ปิดงานมีปัญหา)
         9=Cancelled (เรียกคืนพัสดุแล้ว)
     """
-wip_and_task_status = [
-        ('order_received', 'Order Received'), 
-        ('kitting', 'Kitting'), 
-        ('checking', 'Checking'), 
-        ('packing', 'Packing'),
-        ('delivery_order_created', 'Delivery Order Created'),
-        ('courier_pickup_requested', 'Courier Pickup Requested'),
-        ('pick_up_by_courier', 'Pick Up By Courier'), 
-        ('in_transit', 'In Transit'),
-        ('delivering', 'Delivering'),
-        ('detained', 'Detained'),
-        ('signed', 'Signed'),
-        ('problem_shipment_being_processed', 'Problem Shipment Being Processed'),
-        ('returned_shipment', 'Returned Shipment'),
-        ('close_by_exception', 'Close By Exception'),
-        ('cancelled', 'Cancelled'),
-        ('done', 'Done')
-    ]
+part_corner_wip_and_task_status = [
+    ('order_received', 'Order Received'),
+    ('kitting', 'Kitting'),
+    ('checking', 'Checking'),
+    ('packing', 'Packing'),
+    ('cancelled', 'Cancelled'),
+    ('done', 'Done')
+]
+
+flash_express_wip_and_task_good_status = [
+    ('pending', 'Pending'), # indicate the process not reach to Flash Express
+    ('delivery_order_created', 'Delivery Order Created'),
+    ('courier_pickup_requested', 'Courier Pickup Requested'),
+    ('pick_up_by_courier', 'Pick Up By Courier'),
+    ('in_transit', 'In Transit'),
+    ('delivering', 'Delivering'),
+    ('signed', 'Signed'),
+]
+
+flash_express_wip_and_task_bad_status = [
+    ('detained', 'Detained'),
+    ('problem_shipment_being_processed', 'Problem Shipment Being Processed'),
+    ('returned_shipment', 'Returned Shipment'),
+    ('close_by_exception', 'Close By Exception'),
+    ('cancelled', 'Cancelled'),
+]
+
+part_corners_pickup_request_status = [
+    ('draft', 'Draft'),
+    ('pickup_request_created', 'Pickup Request Created'),
+]
+
+flash_express_pickup_request_status = [
+    ('pending', 'Pending'), # indicate the process not reach to Flash Express
+    ('awaiting_allocation', 'Awaiting Allocation'),
+    ('awaiting_to_pickup', 'Awaiting To Pickup'),
+    ('picked_up', 'Picked Up'),
+    ('task_handovered', 'Task Handovered'),
+    ('cancelled', 'Cancelled'),
+]
 
 
 """

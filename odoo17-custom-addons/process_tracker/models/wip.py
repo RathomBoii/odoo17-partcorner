@@ -1,7 +1,7 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
-from ...common.static.allowed_status_transition_dict import allowed_status_transition_dict
-from ...common.static.status import wip_and_task_status
+from ...common.static.status_rules import wip_and_task_allowed_status_transition
+from ...common.static.status import part_corner_wip_and_task_status, flash_express_wip_and_task_good_status, flash_express_wip_and_task_bad_status
 
 class ProcessWIP(models.Model):
     _name = 'process.wip'
@@ -12,7 +12,8 @@ class ProcessWIP(models.Model):
     created_date = fields.Datetime(default=fields.Datetime.now, readonly=True)
 
     
-    status = fields.Selection(wip_and_task_status, default='order_received')
+    status = fields.Selection(part_corner_wip_and_task_status, default='order_received')
+    flash_express_status = fields.Selection(flash_express_wip_and_task_good_status + flash_express_wip_and_task_bad_status, default='pending', string="Flash Express Status", help="This field is used to track the status of the Flash Express delivery. All available statuses are list from Flash Express API. 'Pending' mean there are nor Flash Order created.")
 
     total = fields.Float(readonly=True, compute="_compute_invoice_delivery_total")
     invoice_id = fields.Many2one('account.move',  string="Invoice ID", compute="_compute_invoice_delivery_total")
@@ -24,6 +25,30 @@ class ProcessWIP(models.Model):
     _sql_constraints = [
         ('unique_sale_order_id', 'unique(sale_order_id)', 'A WIP record can only be created for a sale order once.')
     ]
+
+    is_flash_order_created = fields.Boolean(
+        string="Is Flash Order Created",
+        help="This field is used to determine if the Flash Express order has been created for this WIP. "
+            "If True, it indicates that the Flash Express order has been created and the status will be updated accordingly.",
+        default=False,
+        compute="_compute_is_flash_order_created",
+    )
+
+    """
+    This field will be backward manipulated from warehouse.task when the Flash Express order is created.
+    """
+    flash_express_order_id = fields.Char(
+        string="Flash Express Order ID",
+        help="This field is used to store the Flash Express order ID. "
+            "It will be set when the Flash Express order is created.",
+        # readonly=True,
+    )
+
+    @api.depends('flash_express_order_id')
+    def _compute_is_flash_order_created(self):
+        for record in self:
+            # If flash_express_order_id is set, it means the Flash Express order has been created.
+            record.is_flash_order_created = bool(record.flash_express_order_id)
 
     @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
     def _compute_invoice_delivery_total(self):
@@ -54,7 +79,19 @@ class ProcessWIP(models.Model):
                 # check if prefered status in allowed status list for original status 
                 preferred_status = record.status
                 previous_status = record._origin.status
-                is_valid_transition = preferred_status in allowed_status_transition_dict.get(previous_status,[]) # type: ignore
+                is_valid_transition = preferred_status in wip_and_task_allowed_status_transition.get(previous_status, [])  # type: ignore
                 if not is_valid_transition:
                     raise ValidationError(f"ไม่สามารถเปลี่ยน status ข้ามขั้นตอนได้ จาก {previous_status} ไปสู่ {record.status}.")
+                
+    @api.onchange('flash_express_status')
+    def _onchange_flash_express_status(self): 
+        for record in self:
+            if record.flash_express_status and record._origin.flash_express_status:
+                # check if there are both original status and preferred status
+                # check if prefered status in allowed status list for original status 
+                preferred_status = record.flash_express_status
+                previous_status = record._origin.flash_express_status
+                is_valid_transition = preferred_status in wip_and_task_allowed_status_transition.get(previous_status, [])  # type: ignore
+                if not is_valid_transition:
+                    raise ValidationError(f"ไม่สามารถเปลี่ยน status ข้ามขั้นตอนได้ จาก {previous_status} ไปสู่ {record.flash_express_status}.")
     

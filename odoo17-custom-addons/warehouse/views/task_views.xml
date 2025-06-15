@@ -15,7 +15,26 @@
                                 string="Print Delivery Notes"
                                 class="btn-primary"
                             />
-                            <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,booking,pick_up_by_courier,done"/>
+                            <div style="display: flex; flex-flow: row wrap; margin: 10px 10px; align-items: flex-start; gap: 10px;">
+                                <div style="display: flex; align-items: center; margin: 10px 10px; justify-content: flex-start; flex-grow: 1;">
+                                    <div>
+                                        <h4>PartCorners Status</h4>
+                                    </div>
+                                    <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,delivery_order_created,courier_pickup_requested"/>
+                                </div>
+                                <div style="display: flex; align-items: center; margin: 10px 10px; justify-content: flex-start; flex-grow: 1;">
+                                    <div>
+                                        <h4>Flash Status</h4>
+                                    </div>
+                                    <field name="status" widget="statusbar" statusbar_visible="pick_up_by_courier,in_transit,delivering,detained,signed,problem_shipment_being_processed,returned_shipment,close_by_exception,cancelled,done"/>
+                                </div>
+                                <div style="display: flex; align-items: center; margin: 10px 10px; justify-content: flex-start; flex-grow: 1;">
+                                    <div>
+                                        <h4>Flash Bad Status</h4>
+                                    </div>
+                                    <field name="status" widget="statusbar" statusbar_visible="pick_up_by_courier,in_transit,delivering,detained,signed,problem_shipment_being_processed,returned_shipment,close_by_exception,cancelled,done"/>
+                                </div>
+                            </div>
                     </header>
                     <sheet>
                         <group>

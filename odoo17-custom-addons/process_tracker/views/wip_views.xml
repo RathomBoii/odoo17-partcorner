@@ -13,8 +13,6 @@
         <field name="total" />
         <field name="invoice_id" string="Invoice ID"/>
         <field name="delivery_id" string="Delivery Note"/> 
-        <!-- <field name="pickup_date" string="Courier Pick Up Date" />
-        <field name="delivered_date" /> -->
         <field name="status" 
           widget="badge" 
           decoration-danger="status == 'order_received'"
@@ -25,6 +23,14 @@
           decoration-success="status == 'pick_up_by_courier' or status == 'done'"
           optional="show"
         />
+        <field name="flash_express_status" widget="badge" 
+              decoration-muted="flash_express_status == 'pending' or flash_express_status == 'detained'"
+              decoration-info="flash_express_status == 'courier_pickup_requested' or flash_express_status == 'in_transit'"
+              decoration-danger="flash_express_status == 'problem_shipment_being_processed' or flash_express_status == 'cancelled' or flash_express_status == 'close_by_exception'"
+              decoration-primary="flash_express_status == 'delivery_order_created' or flash_express_status == 'picked_up' or flash_express_status == 'pick_up_by_courier' or flash_express_status == 'delivering'"
+              decoration-warning="flash_express_status == 'returned_shipment'"
+              decoration-success="flash_express_status == 'signed'"
+            />
       </tree>
     </field>
   </record>
@@ -48,9 +54,15 @@
             <field name="total"/>
             <field name="invoice_id"/>
             <field name="delivery_id" string="Delivery Note"/>
-            <!-- <field name="pickup_date" style="border-bottom: 0.5px solid black;"/>
-            <field name="delivered_date" style="border-bottom: 0.5px solid black;"/> -->
             <field name="status" style="border-bottom: 0.5px solid black;"/>
+            <field name="flash_express_status" widget="badge" 
+              decoration-muted="flash_express_status == 'pending' or flash_express_status == 'detained'"
+              decoration-info="flash_express_status == 'courier_pickup_requested' or flash_express_status == 'in_transit'"
+              decoration-danger="flash_express_status == 'problem_shipment_being_processed' or flash_express_status == 'cancelled' or flash_express_status == 'close_by_exception'"
+              decoration-primary="flash_express_status == 'delivery_order_created' or flash_express_status == 'picked_up' or flash_express_status == 'pick_up_by_courier' or flash_express_status == 'delivering'"
+              decoration-warning="flash_express_status == 'returned_shipment'"
+              decoration-success="flash_express_status == 'signed'"
+            />
           </group>
 
           <notebook>
