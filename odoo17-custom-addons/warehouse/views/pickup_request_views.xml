@@ -100,10 +100,5 @@
                 </p>
             </field>
         </record>
-
-        <menuitem id="warehouse_root_menu" name="Warehouse Operations" sequence="10"/>
-        <menuitem id="warehouse_pickup_request_menu" name="Pickup Requests" parent="warehouse_root_menu" 
-                  action="warehouse_pickup_request_action" sequence="10"/>
-
     </data>
 </odoo>

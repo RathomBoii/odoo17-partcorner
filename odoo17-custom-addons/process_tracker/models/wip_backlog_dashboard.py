@@ -13,11 +13,11 @@ class WIPBacklogDashboard(models.TransientModel):
     def _compute_counts(self):
         """Compute the counts of WIP and Backlog records."""
         for record in self:
-            record.wip_count = len(record.wip_ids)
-            record.backlog_count = len(record.backlog_ids)
+            record.wip_count = len(record.wip_ids) # type: ignore
+            record.backlog_count = len(record.backlog_ids) # type: ignore
 
     @api.model
-    def default_get(self, fields):
+    def default_get(self, fields): # type: ignore
         """Fetch WIP and Backlog records dynamically."""
         res = super(WIPBacklogDashboard, self).default_get(fields)
 

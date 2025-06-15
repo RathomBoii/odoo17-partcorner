@@ -15,7 +15,35 @@
                                 string="Print Delivery Notes"
                                 class="btn-primary"
                             />
-                            <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,booking,pick_up_by_courier,done"/>
+                            <div style="display: flex; flex-flow: row wrap; margin: 10px 10px; align-items: flex-start; gap: 10px;">
+                                <!-- <field name="flash_exception_alert"
+                                    widget="badge"
+                                    decoration-danger="flash_exception_alert != False"
+                                    nolabel="1"
+                                /> -->
+                                <div style="display: flex; align-items: center; margin: 5px 5px; justify-content: flex-start; flex-grow: 1;">
+                                    <div style="width: 200px;">
+                                        <h5>PartCorners Status</h5>
+                                    </div>
+                                    <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,done" options="{'clickable': True}"/>
+                                </div>
+                                <div style="display: flex; align-items: center; margin: 5px 5px; justify-content: flex-start; flex-grow: 1;">
+                                    <div style="width: 200px;">
+                                        <h5>Flash Express Status</h5>
+                                    </div>
+                                    <field name="flash_express_status"
+                                        widget="statusbar"
+                                        statusbar_visible="pending,delivery_order_created,courier_pickup_requested,pick_up_by_courier,in_transit,delivering,signed"
+                                        options="{'status_bar_more': 'detained,problem_shipment_being_processed,returned_shipment,close_by_exception,cancelled', 'clickable': True}"
+                                    />
+                                </div>
+                                <!-- <div style="border: 1px solid green; display: flex; align-items: center; margin: 5px 5px; justify-content: flex-start; flex-grow: 1;">
+                                    <div style="width: 200px;">
+                                        <h5>Flash Express Error Status</h5>
+                                    </div>
+                                    <field name="flash_express_status" widget="statusbar" statusbar_visible="detained,problem_shipment_being_processed,returned_shipment,close_by_exception,cancelled" options="{'status_bar_more': 'pending,delivery_order_created,courier_pickup_requested,pick_up_by_courier,in_transit,delivering,signed', 'clickable': True}"/>
+                                </div> -->
+                            </div>
                     </header>
                     <sheet>
                         <group>
@@ -114,7 +142,7 @@
                     <field name="process_wip_id"/>
                     <field name="assignee"/>
                     <field name="delivery_id"/>
-                    <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,booking,pick_up_by_courier,done"/>
+                    <field name="status" widget="statusbar" statusbar_visible="order_received,kitting,checking,packing,booking,pick_up_by_courier,done" options="{'clickable': True}"/>
                 </tree>
             </field>
         </record>
