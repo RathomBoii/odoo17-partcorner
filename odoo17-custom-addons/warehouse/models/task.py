@@ -291,6 +291,8 @@ class WarehouseTask(models.Model):
 
         # 2. Automate internal status when Flash Express is 'signed'
         if vals.get('flash_express_status') == 'signed':
+            if not self.is_create_flash_order_success:
+                raise UserError('Cannot set status to "done" because Flash Express order was not created successfully. Please create the Flash Express order first.')
             for record in self:
                 if record.status != 'done':
                     # This write will be caught by the sync logic above and sent to process.wip
