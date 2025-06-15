@@ -16,7 +16,7 @@ part_corner_wip_and_task_status = [
     ('checking', 'Checking'),
     ('packing', 'Packing'),
     ('cancelled', 'Cancelled'),
-    ('done', 'Done')
+    ('done', 'Done') # This status will be done when Flash Express Status is 'signed'
 ]
 
 flash_express_wip_and_task_good_status = [
@@ -26,7 +26,7 @@ flash_express_wip_and_task_good_status = [
     ('pick_up_by_courier', 'Pick Up By Courier'),
     ('in_transit', 'In Transit'),
     ('delivering', 'Delivering'),
-    ('signed', 'Signed'),
+    ('signed', 'Done'),
 ]
 
 flash_express_wip_and_task_bad_status = [

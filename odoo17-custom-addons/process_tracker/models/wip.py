@@ -26,14 +26,6 @@ class ProcessWIP(models.Model):
         ('unique_sale_order_id', 'unique(sale_order_id)', 'A WIP record can only be created for a sale order once.')
     ]
 
-    is_flash_order_created = fields.Boolean(
-        string="Is Flash Order Created",
-        help="This field is used to determine if the Flash Express order has been created for this WIP. "
-            "If True, it indicates that the Flash Express order has been created and the status will be updated accordingly.",
-        default=False,
-        compute="_compute_is_flash_order_created",
-    )
-
     """
     This field will be backward manipulated from warehouse.task when the Flash Express order is created.
     """
@@ -43,12 +35,6 @@ class ProcessWIP(models.Model):
             "It will be set when the Flash Express order is created.",
         # readonly=True,
     )
-
-    @api.depends('flash_express_order_id')
-    def _compute_is_flash_order_created(self):
-        for record in self:
-            # If flash_express_order_id is set, it means the Flash Express order has been created.
-            record.is_flash_order_created = bool(record.flash_express_order_id)
 
     @api.depends('sale_order_id.invoice_ids', 'sale_order_id.picking_ids')
     def _compute_invoice_delivery_total(self):
